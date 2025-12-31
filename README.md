@@ -1,174 +1,164 @@
 # xoegit
 
-**xoegit** is an AI-powered CLI tool that helps you generate concise, semantic, and atomic git commit messages and PR descriptions. It analyzes your `git diff`, `git status`, and `git log` to provide context-aware suggestions powered by Google's Gemini models.
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-AI-8E75B2?logo=google&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+**xoegit** is an AI-powered CLI tool that generates concise, semantic, and atomic git commit messages and PR descriptions. It analyzes your `git diff`, `git status`, and `git log` to provide context-aware suggestions powered by Google's Gemini models.
 
 > **Philosophy:** "Craft, Don't Code" — `xoegit` suggests commands; YOU execute them. You stay in control.
 
 ## Features
 
-- **Atomic Commits:** Automatically suggests splitting large changes into multiple logical commits.
-- **Context Aware:** Reads your staged/unstaged changes and recent commit history.
-- **Semantic Commits:** strictly follows [Conventional Commits](https://www.conventionalcommits.org/).
-- **PR Ready:** Generates a ready-to-use PR title and description based on the suggested commits.
+- **Atomic Commits** — Automatically suggests splitting large changes into multiple logical commits
+- **Context Aware** — Provide context with `--context` for more accurate commit messages
+- **Smart Fallback** — Automatically switches between Gemini models when rate limits are hit
+- **Semantic Commits** — Strictly follows [Conventional Commits](https://www.conventionalcommits.org/)
+- **PR Ready** — Generates ready-to-use PR title and description
 
 ## Installation
 
 ### Prerequisites
 
-- **Node.js**: Version 18 or higher is required.
-- **Git**: Must be installed and available in your PATH.
-- **API Key**: A Google Gemini API key is required (get one [here](https://aistudio.google.com/)).
+- **Node.js**: Version 18 or higher
+- **Git**: Must be installed and available in your PATH
+- **API Key**: A Google Gemini API key ([get one here](https://aistudio.google.com/))
 
 ### Quick Install
 
-1.  Clone the repository:
+```bash
+git clone git@github.com:ujangdoubleday/xoegit.git
+cd xoegit
+make
+```
 
-    ```bash
-    git clone git@github.com:ujangdoubleday/xoegit.git
-    cd xoegit
-    ```
-
-2.  Run the automated install script:
-
-    ```bash
-    make
-    ```
-
-    _This command will install dependencies, build the project, and link the binary globally._
-
-    > **Note:** If you encounter permission errors during the global link step, run:
-    >
-    > ```bash
-    > sudo make global
-    > ```
-
----
+> **Note:** If you encounter permission errors, run `sudo make global`
 
 ## Configuration
 
-**xoegit** is designed to be "Zero Config".
-
 ### First Run
 
-Simply run `xoegit` for the first time. It will prompt you for your Google Gemini API Key securely and save it for future use.
+Simply run `xoegit` for the first time. It will prompt you for your API Key securely and save it.
 
 ### Manual Configuration
 
-If you prefer to configure it manually, you can set the API key in two ways:
+**Option 1: Environment Variable**
 
-1.  **Environment Variable:**
-    Set `XOEGIT_GEMINI_API_KEY` in your shell or `.env` file.
+```bash
+export XOEGIT_GEMINI_API_KEY="your-key-here"
+```
 
-2.  **Config File:**
-    Manually create the config file at:
+**Option 2: Config File**
 
-    - **Linux/macOS:** `~/.config/xoegit/config.json`
-    - **Windows:** `%APPDATA%\xoegit\config.json`
+- Linux: `~/.config/xoegit/config.json`
+- macOS: `~/Library/Application Support/xoegit/config.json`
+- Windows: `%APPDATA%\xoegit\config.json`
 
-    Content:
-
-    ```json
-    {
-      "XOEGIT_GEMINI_API_KEY": "your-key-here"
-    }
-    ```
-
----
+```json
+{
+  "XOEGIT_GEMINI_API_KEY": "your-key-here"
+}
+```
 
 ## Usage
-
-Navigate to any directory that is a Git repository and run:
 
 ```bash
 xoegit
 ```
 
-**Options:**
+### Options
 
-- `-k, --api-key <key>`: Skip configuration check and use the provided API key for this session.
+| Option                 | Description                                   |
+| ---------------------- | --------------------------------------------- |
+| `-k, --api-key <key>`  | Use specific API key for this session         |
+| `-c, --context <text>` | Provide context for more accurate suggestions |
+| `-V, --version`        | Show version                                  |
+| `-h, --help`           | Show help                                     |
 
-Example:
+### Examples
 
 ```bash
-xoegit --api-key AIzaSyYourSecretKey...
+# Basic usage
+xoegit
+
+# With context for better commit type detection
+xoegit --context "refactoring folder structure"
+xoegit -c "fixing authentication bug"
+xoegit -c "adding new payment feature"
 ```
 
-### Process Flow
+### Sample Output
 
-1.  **Analysis**: `xoegit` runs `git diff`, `git status`, and `git log` to understand your changes.
-2.  **Reasoning**: It sends this context to the AI model.
-3.  **Suggestion**: The AI generates a set of git commands.
-4.  **Output**: You see the suggested commands in your terminal.
+```
+xoegit — AI-powered commit generator
 
-### The "Craft, Don't Code" Philosophy
+Suggestion generated!
 
-`xoegit` will **never** execute commands for you. It strictly provides suggestions.
-You must copy the commands and execute them yourself. This ensures you review every commit before it happens.
-
----
-
-## Workflow Examples
-
-### Scenario 1: Feature + Housekeeping
-
-**You Changed:**
-
-- `src/auth.ts` (Implemented login)
-- `package.json` (Updated dependencies)
-
-**Output:**
-
-```text
 commit 1
-git add src/auth.ts
-git commit -m "feat(auth): implement login logic"
+git add src/auth/login.ts
+git commit -m "feat(auth): add login validation"
 
 commit 2
-git add package.json
-git commit -m "chore: update dependencies"
+git add src/utils/logger.ts
+git commit -m "refactor(utils): improve error logging"
 
-pr title: feat(auth): implement login and update deps
-pr description: feat(auth): implement login and update deps
+pr title: feat(auth): implement secure login
+pr description: feat(auth): implement secure login
+- feat(auth): add login validation
+- refactor(utils): improve error logging
 ```
 
-### Scenario 2: New Untracked Files
+## Smart Model Fallback
 
-**You Created:**
+xoegit uses multiple Gemini models with automatic fallback:
 
-- `src/new-component.ts` (Untracked)
+| Model                   | Priority      |
+| ----------------------- | ------------- |
+| `gemini-2.5-flash-lite` | 1st (default) |
+| `gemini-2.5-flash`      | 2nd           |
+| `gemini-3-flash`        | 3rd           |
 
-**Output:**
-
-```text
-commit 1
-git add src/new-component.ts
-git commit -m "feat(ui): add new component"
-...
-```
-
----
+When one model hits its rate limit, xoegit automatically tries the next one.
 
 ## Troubleshooting
 
-### "Error: Current directory is not a git repository"
+### "Current directory is not a git repository"
 
-- Ensure you have run `git init` or are inside a valid git repo.
-
-### "Gemini Provider Error: [404] ..."
-
-- Your API key might be invalid, or the configured model `gemini-2.5-flash-lite` is not available to your account.
-- Check your `~/.config/xoegit/config.json` or environment variables.
+- Ensure you're inside a valid git repo (`git init`)
 
 ### "No changes detected"
 
-- Make sure you have either modified files (`git diff`), staged files, or untracked files (`git status`).
-
----
+- Make sure you have modified, staged, or untracked files
 
 ## Development
 
-- **Build:** `make build`
-- **Watch Mode:** `tsc -w`
+```bash
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Run tests
+npm test
+
+# Watch mode for tests
+npm run test:watch
+```
+
+## Project Structure
+
+```
+src/
+├── cli/           # CLI program and actions
+├── config/        # Configuration management
+├── git/           # Git operations
+├── prompts/       # AI prompt templates
+├── providers/     # Gemini AI integration
+├── types/         # TypeScript types
+└── utils/         # Utilities (input, UI)
+```
 
 ## License
 
