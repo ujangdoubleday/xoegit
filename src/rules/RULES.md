@@ -37,7 +37,7 @@ git add <files for commit N>
 git commit -m "<type>(<scope>): <subject>"
 
 pr title: <type>(<scope>): <summary>
-squash commit: <type>(<scope>): <summary>
+pr description: <type>(<scope>): <summary>
 ```
 
 **Example Output (showing 3 commits, but could be more):**
@@ -56,7 +56,7 @@ git add package.json
 git commit -m "chore: update dependencies"
 
 pr title: feat(auth): implement secure login and maintenance
-squash commit: feat(auth): implement secure login and maintenance
+pr description: feat(auth): implement secure login and maintenance
 ```
 
 ## 3. How to Use the Agent
@@ -103,10 +103,10 @@ Agent will analyze the diff and `git status` and automatically split changes int
 - Use imperative mood ("add" not "added")
 - No period at the end
 
-## 5. PR Title & Squash Message Convention
+## 5. PR Title & PR Description Convention
 
 - **PR Title**: summaries the entire set of changes.
-- **Squash Commit**: usually matches the PR title or a slightly more detailed summary.
+- **PR Description**: matches the PR title and includes a detailed list of changes.
 
 ## 6. Logic for Splitting Commits
 
