@@ -21,7 +21,7 @@
     "commander": "^14.0.2",
     "ora": "^8.1.0",
     "simple-git": "^3.30.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.7.0"
   },
   "optionalDependencies": {
     "dotenv": "^17.2.3"

@@ -21,14 +21,22 @@ const program = new Command();
 program
   .name('xoegit')
   .description('AI-powered git commit generator')
-  .version('0.1.0');
+  .version('0.1.0')
+  .option('-k, --api-key <key>', 'Gemini API Key');
 
 program
   .action(async () => {
     try {
       // 0. FAIL FAST: Check API Key Config
+      const options = program.opts();
+      let apiKey = options.apiKey;
+      
       const configService = new ConfigService();
-      let apiKey = await configService.getApiKey();
+      
+      // If not provided via flag, check config
+      if (!apiKey) {
+        apiKey = await configService.getApiKey();
+      }
 
       if (!apiKey) {
         console.log(chalk.yellow('Gemini API Key not found.'));
