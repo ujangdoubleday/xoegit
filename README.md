@@ -25,7 +25,13 @@
 - **Git**: Must be installed and available in your PATH
 - **API Key**: A Google Gemini API key ([get one here](https://aistudio.google.com/))
 
-### Quick Install
+### Install
+
+```bash
+npm install -g xoegit
+```
+
+**or** install from source:
 
 ```bash
 git clone git@github.com:ujangdoubleday/xoegit.git
@@ -33,33 +39,11 @@ cd xoegit
 make
 ```
 
-> **Note:** If you encounter permission errors, run `sudo make global`
-
 ## Configuration
 
-### First Run
+Simply run `xoegit` for the first time. It will prompt you for your API Key securely and save it locally.
 
-Simply run `xoegit` for the first time. It will prompt you for your API Key securely and save it.
-
-### Manual Configuration
-
-**Option 1: Environment Variable**
-
-```bash
-export XOEGIT_GEMINI_API_KEY="your-key-here"
-```
-
-**Option 2: Config File**
-
-- Linux: `~/.config/xoegit/config.json`
-- macOS: `~/Library/Application Support/xoegit/config.json`
-- Windows: `%APPDATA%\xoegit\config.json`
-
-```json
-{
-  "XOEGIT_GEMINI_API_KEY": "your-key-here"
-}
-```
+> **Security Note:** Your API key is stored locally on your device only. We do not collect, store, or have access to your API key.
 
 ## Usage
 
