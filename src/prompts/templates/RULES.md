@@ -38,6 +38,9 @@ git commit -m "<type>(<scope>): <subject>"
 
 pr title: <type>(<scope>): <summary>
 pr description: <type>(<scope>): <summary>
+- <commit 1 message>
+- <commit 2 message>
+- ... (list all commits)
 ```
 
 **Example Output (showing 3 commits, but could be more):**
@@ -57,6 +60,9 @@ git commit -m "chore: update dependencies"
 
 pr title: feat(auth): implement secure login and maintenance
 pr description: feat(auth): implement secure login and maintenance
+- feat(auth): add login validation
+- refactor(utils): improve error logging
+- chore: update dependencies
 ```
 
 ## 3. How to Use the Agent
