@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 /**
- * generates a commit suggestion using the Google Generative AI SDK (Gemini)
+ * Generates a commit suggestion using the Google Generative AI SDK (Gemini)
  */
 export async function generateCommitSuggestion(
   apiKey: string,
@@ -11,10 +11,9 @@ export async function generateCommitSuggestion(
   log: string
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  // use the user-requested model.
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
-  // parse status to find untracked files and make them explicit to the AI
+  // Parse status to find untracked files
   let untrackedMsg = '';
   try {
     const statusObj = JSON.parse(status);
@@ -47,8 +46,8 @@ Please suggest the git add command and the git commit message.
 
   try {
     const result = await model.generateContent([
-        { text: systemPrompt },
-        { text: userMessage }
+      { text: systemPrompt },
+      { text: userMessage }
     ]);
     const response = await result.response;
     return response.text();

@@ -10,7 +10,7 @@
     "xoegit": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc && mkdir -p dist/rules && cp src/rules/RULES.md dist/rules/RULES.md",
+    "build": "tsc && mkdir -p dist/prompts/templates && cp src/prompts/templates/RULES.md dist/prompts/templates/RULES.md",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -25,12 +25,7 @@ export async function getGitStatus(): Promise<string> {
  * Gets the diff of staged and unstaged changes
  */
 export async function getGitDiff(): Promise<string> {
-  // Get diff of everything (staged and unstaged)
   const diff = await git.diff();
-  // Also get staged diff to be thorough, if needed, but 'git diff' usually shows unstaged.
-  // 'git diff --cached' shows staged.
-  // For the AI to know full context, sending both might be useful, or a combined view.
-  // Let's allow the caller to decide or just fetch both.
   const diffCached = await git.diff(['--cached']);
   
   return `Unstaged Changes:\n${diff}\n\nStaged Changes:\n${diffCached}`;

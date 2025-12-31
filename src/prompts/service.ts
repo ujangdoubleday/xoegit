@@ -8,12 +8,11 @@ import url from 'url';
 export async function generateSystemPrompt(): Promise<string> {
   let rulesContent = '';
   try {
-    // Find rules relative to this file (dist/services/prompt.service.js -> dist/rules/RULES.md)
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-    const rulesPath = path.resolve(__dirname, '../rules/RULES.md');
+    const rulesPath = path.resolve(__dirname, './templates/RULES.md');
     rulesContent = await fs.readFile(rulesPath, 'utf-8');
   } catch (error) {
-    console.warn('Could not read RULES/RULES.md, using default rules.');
+    console.warn('Could not read RULES.md, using default rules.');
     rulesContent = 'Follow conventional commits.';
   }
 

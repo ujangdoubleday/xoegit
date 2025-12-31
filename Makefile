@@ -7,6 +7,7 @@ install:
 
 build:
 	npm run build
+	chmod +x dist/index.js
 
 global:
 	npm link
