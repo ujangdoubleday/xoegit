@@ -4,17 +4,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
  * generates a commit suggestion using the Google Generative AI SDK (Gemini)
  */
 export async function generateCommitSuggestion(
+  apiKey: string,
   systemPrompt: string,
   diff: string,
   status: string,
   log: string
 ): Promise<string> {
-  const apiKey = process.env.GOOGLE_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY is not set in .env file');
-  }
-
   const genAI = new GoogleGenerativeAI(apiKey);
   // use the user-requested model.
   const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
