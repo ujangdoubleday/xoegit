@@ -46,24 +46,31 @@
 
 ## Configuration
 
-`xoegit` requires an environment variable to authenticate with Google's AI service.
+**xoegit** is designed to be "Zero Config".
 
-1.  **Environment File**: You can place a `.env` file in either:
+### First Run
 
-    - The root of your current project (where you run the command).
-    - The `xoegit` installation directory (global).
+Simply run `xoegit` for the first time. It will prompt you for your Google Gemini API Key securely and save it for future use.
 
-2.  **Setting the Key**:
-    Copy the example file:
+### Manual Configuration
 
-    ```bash
-    cp .env.example .env
-    ```
+If you prefer to configure it manually, you can set the API key in two ways:
 
-    Edit `.env` and set your key:
+1.  **Environment Variable:**
+    Set `XOEGIT_GEMINI_API_KEY` in your shell or `.env` file.
 
-    ```env
-    GOOGLE_API_KEY=AIzaSy...your-key-here...
+2.  **Config File:**
+    Manually create the config file at:
+
+    - **Linux/macOS:** `~/.config/xoegit/config.json`
+    - **Windows:** `%APPDATA%\xoegit\config.json`
+
+    Content:
+
+    ```json
+    {
+      "XOEGIT_GEMINI_API_KEY": "your-key-here"
+    }
     ```
 
 ---
@@ -140,7 +147,7 @@ git commit -m "feat(ui): add new component"
 ### "Gemini Provider Error: [404] ..."
 
 - Your API key might be invalid, or the configured model `gemini-2.5-flash-lite` is not available to your account.
-- Check your `.env` file.
+- Check your `~/.config/xoegit/config.json` or environment variables.
 
 ### "No changes detected"
 
