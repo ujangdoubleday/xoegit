@@ -87,7 +87,7 @@ export async function analyzeAction(): Promise<void> {
       spinner.text = 'Generating suggestion from AI...';
     }
 
-    // 4. Call AI
+    // 4. Call AI (automatic model fallback on rate limit)
     try {
       const suggestion = await generateCommitSuggestion(apiKey, systemPrompt, diff, status, log, userContext);
       spinner.succeed(chalk.green('Suggestion generated!'));
