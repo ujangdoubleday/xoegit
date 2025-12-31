@@ -19,10 +19,12 @@
     "@google/generative-ai": "^0.24.1",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
-    "dotenv": "^17.2.3",
-    "ora": "^9.0.0",
+    "ora": "^8.1.0",
     "simple-git": "^3.30.0",
     "typescript": "^5.9.3"
+  },
+  "optionalDependencies": {
+    "dotenv": "^17.2.3"
   },
   "devDependencies": {
     "@types/node": "^25.0.3",
