@@ -3,23 +3,53 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
-import dotenv from 'dotenv';
+import { ConfigService } from './services/config.service.js';
 import { getGitDiff, getGitLog, getGitStatus, isGitRepository } from './services/git.service.js';
 import { generateSystemPrompt } from './services/prompt.service.js';
 import { generateCommitSuggestion } from './services/gemini.service.js';
 
-dotenv.config();
+// Try loading dotenv if available, but don't crash if not (it's optional now)
+try {
+  const dotenv = await import('dotenv');
+  dotenv.config();
+} catch (e) {
+  // dotenv not installed, ignore
+}
 
 const program = new Command();
 
 program
   .name('xoegit')
   .description('AI-powered git commit generator')
-  .version('1.0.0');
+  .version('0.1.0');
 
 program
   .action(async () => {
     try {
+      // 0. FAIL FAST: Check API Key Config
+      const configService = new ConfigService();
+      let apiKey = await configService.getApiKey();
+
+      if (!apiKey) {
+        console.log(chalk.yellow('Gemini API Key not found.'));
+        console.log(chalk.cyan('You can get one at https://aistudio.google.com/'));
+        
+        try {
+            apiKey = await configService.promptApiKey();
+        } catch (err) {
+            console.error(chalk.red('\nFailed to read input.'));
+            process.exit(1);
+        }
+
+        if (!apiKey || apiKey.trim() === '') {
+          console.error(chalk.red('API Key is required to use xoegit.'));
+          process.exit(1);
+        }
+        
+        await configService.saveApiKey(apiKey);
+        console.log(chalk.green('\nAPI Key saved successfully!'));
+      }
+
       // 1. Check if git repo
       const isRepo = await isGitRepository();
       if (!isRepo) {
@@ -59,7 +89,7 @@ program
 
       // 4. Call AI
       try {
-        const suggestion = await generateCommitSuggestion(systemPrompt, diff, status, log);
+        const suggestion = await generateCommitSuggestion(apiKey, systemPrompt, diff, status, log);
         spinner.succeed(chalk.green('Suggestion generated!'));
         
         console.log('\n' + chalk.bold('--------------------------------------------------'));
