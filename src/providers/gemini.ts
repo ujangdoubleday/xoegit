@@ -1,7 +1,35 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GEMINI_MODELS, GeminiModelName, getModelList } from './models.js';
+
+/**
+ * Check if error is a rate limit error (429)
+ */
+function isRateLimitError(error: any): boolean {
+  const message = error?.message || '';
+  return message.includes('429') || message.includes('Too Many Requests') || message.includes('quota');
+}
+
+/**
+ * Generate content with a specific model
+ */
+async function tryGenerateWithModel(
+  genAI: GoogleGenerativeAI,
+  modelName: GeminiModelName,
+  systemPrompt: string,
+  userMessage: string
+): Promise<string> {
+  const model = genAI.getGenerativeModel({ model: modelName });
+  const result = await model.generateContent([
+    { text: systemPrompt },
+    { text: userMessage }
+  ]);
+  const response = await result.response;
+  return response.text();
+}
 
 /**
  * Generates a commit suggestion using the Google Generative AI SDK (Gemini)
+ * Automatically falls back to other models when rate limit is hit
  */
 export async function generateCommitSuggestion(
   apiKey: string,
@@ -12,7 +40,6 @@ export async function generateCommitSuggestion(
   context: string = ''
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   // Parse status to find untracked files
   let untrackedMsg = '';
@@ -54,14 +81,26 @@ ${diff}
 Please suggest the git add command and the git commit message.
 `;
 
-  try {
-    const result = await model.generateContent([
-      { text: systemPrompt },
-      { text: userMessage }
-    ]);
-    const response = await result.response;
-    return response.text();
-  } catch (error: any) {
-    throw new Error(`Gemini Provider Error: ${error.message}`);
+  // Get ordered list of models to try
+  const modelsToTry = getModelList();
+  const errors: string[] = [];
+
+  // Try each model in order, fallback on rate limit
+  for (const modelName of modelsToTry) {
+    try {
+      const result = await tryGenerateWithModel(genAI, modelName, systemPrompt, userMessage);
+      return result;
+    } catch (error: any) {
+      if (isRateLimitError(error)) {
+        errors.push(`${modelName}: rate limited`);
+        // Continue to next model
+        continue;
+      }
+      // Non-rate-limit error, throw immediately
+      throw new Error(`Gemini Provider Error: ${error.message}`);
+    }
   }
+
+  // All models exhausted
+  throw new Error(`All models rate limited. Tried: ${errors.join(', ')}. Please try again later.`);
 }
