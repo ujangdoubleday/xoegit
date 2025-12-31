@@ -8,10 +8,11 @@ export async function generateCommitSuggestion(
   systemPrompt: string,
   diff: string,
   status: string,
-  log: string
+  log: string,
+  context: string = ''
 ): Promise<string> {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   // Parse status to find untracked files
   let untrackedMsg = '';
@@ -29,7 +30,16 @@ IMPORTANT: The above files are NEW and untracked. You MUST suggest 'git add' for
     // metadata parsing failed, just ignore
   }
 
+  // Build context section if provided
+  const contextSection = context ? `
+USER CONTEXT (IMPORTANT - This describes the overall purpose of these changes):
+"${context}"
+
+Use this context to determine the appropriate commit type (feat, fix, refactor, chore, etc.) and to write more accurate commit messages.
+` : '';
+
   const userMessage = `
+${contextSection}
 Git Status:
 ${status}
 

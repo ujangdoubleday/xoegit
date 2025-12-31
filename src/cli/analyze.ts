@@ -79,9 +79,17 @@ export async function analyzeAction(): Promise<void> {
     // 3. Generate Prompt
     const systemPrompt = await generateSystemPrompt();
 
+    // Get user context if provided
+    const userContext = options.context || '';
+    if (userContext) {
+      spinner.text = `Generating suggestion with context: "${userContext}"...`;
+    } else {
+      spinner.text = 'Generating suggestion from AI...';
+    }
+
     // 4. Call AI
     try {
-      const suggestion = await generateCommitSuggestion(apiKey, systemPrompt, diff, status, log);
+      const suggestion = await generateCommitSuggestion(apiKey, systemPrompt, diff, status, log, userContext);
       spinner.succeed(chalk.green('Suggestion generated!'));
       
       console.log('\n' + chalk.bold('--------------------------------------------------'));
