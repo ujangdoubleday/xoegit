@@ -1,9 +1,10 @@
 # xoegit
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=node.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)
-![Gemini](https://img.shields.io/badge/Gemini-AI-8E75B2?logo=google&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
+[![Node.js](https://img.shields.io/badge/Node.js-20.19.5+-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Gemini](https://img.shields.io/badge/Gemini-AI-8E75B2?logo=google&logoColor=white)](https://ai.google.dev/)
+[![npm](https://img.shields.io/npm/v/xoegit?color=cb3837&logo=npm&logoColor=white)](https://www.npmjs.com/package/xoegit)
+[![License](https://img.shields.io/badge/License-MIT-green)](https://github.com/ujangdoubleday/xoegit/blob/main/LICENSE.md)
 
 **xoegit** is an AI-powered CLI tool that generates concise, semantic, and atomic git commit messages and PR descriptions. It analyzes your `git diff`, `git status`, and `git log` to provide context-aware suggestions powered by Google's Gemini models.
 
@@ -21,7 +22,7 @@
 
 ### Prerequisites
 
-- **Node.js**: Version 18 or higher
+- **Node.js**: Version 20.19.5 or higher
 - **Git**: Must be installed and available in your PATH
 - **API Key**: A Google Gemini API key ([get one here](https://aistudio.google.com/))
 
@@ -50,6 +51,8 @@ Simply run `xoegit` for the first time. It will prompt you for your API Key secu
 ```bash
 xoegit
 ```
+
+![xoegit](docs/xoegit-screenshoot.png)
 
 ### Options
 
