@@ -83,6 +83,16 @@ Navigate to any directory that is a Git repository and run:
 xoegit
 ```
 
+**Options:**
+
+- `-k, --api-key <key>`: Skip configuration check and use the provided API key for this session.
+
+Example:
+
+```bash
+xoegit --api-key AIzaSyYourSecretKey...
+```
+
 ### Process Flow
 
 1.  **Analysis**: `xoegit` runs `git diff`, `git status`, and `git log` to understand your changes.
