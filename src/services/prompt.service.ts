@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import url from 'url';
 
 /**
  * Generates the system prompt for the AI
@@ -7,7 +8,9 @@ import path from 'path';
 export async function generateSystemPrompt(): Promise<string> {
   let rulesContent = '';
   try {
-    const rulesPath = path.resolve(process.cwd(), 'RULES/RULES.md');
+    // Find rules relative to this file (dist/services/prompt.service.js -> dist/rules/RULES.md)
+    const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+    const rulesPath = path.resolve(__dirname, '../rules/RULES.md');
     rulesContent = await fs.readFile(rulesPath, 'utf-8');
   } catch (error) {
     console.warn('Could not read RULES/RULES.md, using default rules.');

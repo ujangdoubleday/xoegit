@@ -5,9 +5,12 @@
   "license": "ISC",
   "author": "",
   "type": "module",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "bin": {
+    "xoegit": "./dist/index.js"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && mkdir -p dist/rules && cp src/rules/RULES.md dist/rules/RULES.md",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
