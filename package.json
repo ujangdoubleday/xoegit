@@ -1,32 +1,59 @@
 {
   "name": "xoegit",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AI-powered CLI tool for generating semantic git commit messages and PR descriptions",
   "license": "MIT",
-  "author": "https://github.com/ujangdoubleday",
+  "author": "ujangdoubleday",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ujangdoubleday/xoegit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ujangdoubleday/xoegit/issues"
+  },
+  "homepage": "https://github.com/ujangdoubleday/xoegit#readme",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
     "xoegit": "./dist/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "gemini",
+    "cli",
+    "conventional-commits",
+    "commit-message",
+    "automation",
+    "productivity"
+  ],
   "scripts": {
     "build": "tsc && mkdir -p dist/prompts/templates && cp src/prompts/templates/RULES.md dist/prompts/templates/RULES.md",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
   },
-  "keywords": [],
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "ora": "^8.1.0",
-    "simple-git": "^3.30.0",
-    "typescript": "^5.7.0"
+    "simple-git": "^3.30.0"
   },
   "devDependencies": {
     "@types/node": "^25.0.3",
     "ts-node": "^10.9.2",
+    "typescript": "^5.7.0",
     "vitest": "^4.0.16"
   }
 }
