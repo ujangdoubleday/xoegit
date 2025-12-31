@@ -1,9 +1,9 @@
 {
   "name": "xoegit",
-  "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
+  "version": "0.1.0",
+  "description": "AI-powered CLI tool for generating semantic git commit messages and PR descriptions",
+  "license": "MIT",
+  "author": "https://github.com/ujangdoubleday",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
