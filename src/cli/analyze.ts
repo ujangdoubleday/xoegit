@@ -1,8 +1,18 @@
-import chalk from 'chalk';
 import ora from 'ora';
 import { program } from './program.js';
 import { ConfigService } from '../config/index.js';
-import { isValidApiKey, promptApiKey } from '../utils/index.js';
+import { 
+  isValidApiKey, 
+  promptApiKey,
+  showBanner,
+  showSuggestion,
+  showSuccess,
+  showError,
+  showWarning,
+  showInfo,
+  showTip,
+  spinnerText
+} from '../utils/index.js';
 import { getGitDiff, getGitLog, getGitStatus, isGitRepository } from '../git/index.js';
 import { generateSystemPrompt } from '../prompts/index.js';
 import { generateCommitSuggestion } from '../providers/index.js';
@@ -11,6 +21,9 @@ import { generateCommitSuggestion } from '../providers/index.js';
  * Main analyze action - orchestrates the commit suggestion flow
  */
 export async function analyzeAction(): Promise<void> {
+  // Show beautiful banner
+  showBanner();
+
   try {
     // 0. Check API Key Config
     const options = program.opts();
@@ -23,34 +36,37 @@ export async function analyzeAction(): Promise<void> {
     }
 
     if (!apiKey) {
-      console.log(chalk.yellow('Gemini API Key not found.'));
-      console.log(chalk.cyan('You can get one at https://aistudio.google.com/'));
+      showWarning('Gemini API Key not found.');
+      showInfo('Get one at https://aistudio.google.com/');
       
       try {
         apiKey = await promptApiKey();
       } catch (err) {
-        console.error(chalk.red('\nFailed to read input.'));
+        showError('Input Error', 'Failed to read input.');
         process.exit(1);
       }
 
       if (!apiKey || !isValidApiKey(apiKey)) {
-        console.error(chalk.red('API Key is required to use xoegit.'));
+        showError('Configuration Error', 'API Key is required to use xoegit.');
         process.exit(1);
       }
       
       await configService.saveApiKey(apiKey);
-      console.log(chalk.green('\nAPI Key saved successfully!'));
+      showSuccess('API Key saved successfully!');
     }
 
     // 1. Check if git repo
     const isRepo = await isGitRepository();
     if (!isRepo) {
-      console.error(chalk.red('Error: Current directory is not a git repository.'));
+      showError('Git Error', 'Current directory is not a git repository.');
       process.exit(1);
     }
 
     // 2. Fetch Git Info
-    const spinner = ora('Analyzing git repository...').start();
+    const spinner = ora({
+      text: spinnerText.analyzing,
+      spinner: 'dots12'
+    }).start();
     
     const [diff, status, log] = await Promise.all([
       getGitDiff(),
@@ -70,11 +86,10 @@ export async function analyzeAction(): Promise<void> {
     }
 
     if (!hasDiff && !hasUntracked) {
-      spinner.warn(chalk.yellow('No changes detected (staged, unstaged, or untracked).'));
+      spinner.stop();
+      showWarning('No changes detected (staged, unstaged, or untracked).');
       return;
     }
-
-    spinner.text = 'Generating suggestion from AI...';
 
     // 3. Generate Prompt
     const systemPrompt = await generateSystemPrompt();
@@ -82,28 +97,27 @@ export async function analyzeAction(): Promise<void> {
     // Get user context if provided
     const userContext = options.context || '';
     if (userContext) {
-      spinner.text = `Generating suggestion with context: "${userContext}"...`;
+      spinner.text = spinnerText.generatingWithContext(userContext);
     } else {
-      spinner.text = 'Generating suggestion from AI...';
+      spinner.text = spinnerText.generating;
     }
 
     // 4. Call AI (automatic model fallback on rate limit)
     try {
       const suggestion = await generateCommitSuggestion(apiKey, systemPrompt, diff, status, log, userContext);
-      spinner.succeed(chalk.green('Suggestion generated!'));
+      spinner.stop();
       
-      console.log('\n' + chalk.bold('--------------------------------------------------'));
-      console.log(suggestion);
-      console.log(chalk.bold('--------------------------------------------------') + '\n');
-      console.log(chalk.gray('Reminder: I only suggest commands. Please copy and execute them manually.'));
+      showSuccess('Suggestion generated!');
+      showSuggestion(suggestion);
+      showTip('Copy and execute the commands above. xoegit never runs commands automatically.');
       
     } catch (error: any) {
-      spinner.fail(chalk.red('Failed to generate suggestion.'));
-      console.error(chalk.red('\nError Details:'), error.message);
+      spinner.stop();
+      showError('Generation Failed', error.message);
     }
 
   } catch (error: any) {
-    console.error(chalk.red('An unexpected error occurred:'), error.message);
+    showError('Unexpected Error', error.message);
     process.exit(1);
   }
 }
