@@ -1,6 +1,6 @@
 {
   "name": "xoegit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "AI-powered CLI tool for generating semantic git commit messages and PR descriptions",
   "license": "MIT",
   "author": "ujangdoubleday",
