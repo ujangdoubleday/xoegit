@@ -6,20 +6,22 @@ import chalk from 'chalk';
 
 // Brand colors
 const brand = {
-  primary: chalk.hex('#6366F1'),    // Indigo
-  secondary: chalk.hex('#8B5CF6'),  // Violet
-  accent: chalk.hex('#06B6D4'),     // Cyan
-  success: chalk.hex('#10B981'),    // Emerald
-  warning: chalk.hex('#F59E0B'),    // Amber
-  error: chalk.hex('#EF4444'),      // Red
-  muted: chalk.hex('#6B7280'),      // Gray
+  primary: chalk.hex('#6366F1'), // Indigo
+  secondary: chalk.hex('#8B5CF6'), // Violet
+  accent: chalk.hex('#06B6D4'), // Cyan
+  success: chalk.hex('#10B981'), // Emerald
+  warning: chalk.hex('#F59E0B'), // Amber
+  error: chalk.hex('#EF4444'), // Red
+  muted: chalk.hex('#6B7280'), // Gray
 };
 
 /**
  * App banner
  */
 export function showBanner(): void {
-  console.log(`\n${brand.primary('⚡')} ${brand.secondary.bold('xoegit')} ${brand.muted('— AI-powered commit generator')}\n`);
+  console.log(
+    `\n${brand.primary('⚡')} ${brand.secondary.bold('xoegit')} ${brand.muted('— AI-powered commit generator')}\n`
+  );
 }
 
 /**
@@ -27,9 +29,9 @@ export function showBanner(): void {
  */
 export function showSuggestion(suggestion: string): void {
   const lines = suggestion.split('\n');
-  
+
   console.log(brand.accent.bold('\n📝 Suggestion\n'));
-  
+
   for (const line of lines) {
     console.log(formatSuggestionLine(line));
   }

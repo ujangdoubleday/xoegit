@@ -8,7 +8,11 @@ export function getConfigPath(): string {
   const homeDir = os.homedir();
   switch (process.platform) {
     case 'win32':
-      return path.join(process.env.APPDATA || path.join(homeDir, 'AppData', 'Roaming'), 'xoegit', 'config.json');
+      return path.join(
+        process.env.APPDATA || path.join(homeDir, 'AppData', 'Roaming'),
+        'xoegit',
+        'config.json'
+      );
     case 'darwin':
       return path.join(homeDir, 'Library', 'Application Support', 'xoegit', 'config.json');
     default: // Linux and others

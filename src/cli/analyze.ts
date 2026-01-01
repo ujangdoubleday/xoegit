@@ -1,8 +1,8 @@
 import ora from 'ora';
 import { program } from './program.js';
 import { ConfigService } from '../config/index.js';
-import { 
-  isValidApiKey, 
+import {
+  isValidApiKey,
   promptApiKey,
   showBanner,
   showSuggestion,
@@ -11,7 +11,7 @@ import {
   showWarning,
   showInfo,
   showTip,
-  spinnerText
+  spinnerText,
 } from '../utils/index.js';
 import { getGitDiff, getGitLog, getGitStatus, isGitRepository } from '../git/index.js';
 import { generateSystemPrompt } from '../prompts/index.js';
@@ -28,9 +28,9 @@ export async function analyzeAction(): Promise<void> {
     // 0. Check API Key Config
     const options = program.opts();
     let apiKey = options.apiKey;
-    
+
     const configService = new ConfigService();
-    
+
     if (!apiKey) {
       apiKey = await configService.getApiKey();
     }
@@ -38,10 +38,10 @@ export async function analyzeAction(): Promise<void> {
     if (!apiKey) {
       showWarning('Gemini API Key not found.');
       showInfo('Get one at https://aistudio.google.com/');
-      
+
       try {
         apiKey = await promptApiKey();
-      } catch (err) {
+      } catch (_err) {
         showError('Input Error', 'Failed to read input.');
         process.exit(1);
       }
@@ -50,7 +50,7 @@ export async function analyzeAction(): Promise<void> {
         showError('Configuration Error', 'API Key is required to use xoegit.');
         process.exit(1);
       }
-      
+
       await configService.saveApiKey(apiKey);
       showSuccess('API Key saved successfully!');
     }
@@ -65,23 +65,19 @@ export async function analyzeAction(): Promise<void> {
     // 2. Fetch Git Info
     const spinner = ora({
       text: spinnerText.analyzing,
-      spinner: 'dots12'
+      spinner: 'dots12',
     }).start();
-    
-    const [diff, status, log] = await Promise.all([
-      getGitDiff(),
-      getGitStatus(),
-      getGitLog()
-    ]);
+
+    const [diff, status, log] = await Promise.all([getGitDiff(), getGitStatus(), getGitLog()]);
 
     // Check if there are any changes
     const hasDiff = diff && diff.trim() !== 'Unstaged Changes:\n\n\nStaged Changes:';
-    
+
     let hasUntracked = false;
     try {
       const statusObj = JSON.parse(status);
       hasUntracked = statusObj.not_added && statusObj.not_added.length > 0;
-    } catch (e) {
+    } catch (_e) {
       // failed to parse
     }
 
@@ -104,20 +100,25 @@ export async function analyzeAction(): Promise<void> {
 
     // 4. Call AI (automatic model fallback on rate limit)
     try {
-      const suggestion = await generateCommitSuggestion(apiKey, systemPrompt, diff, status, log, userContext);
+      const suggestion = await generateCommitSuggestion(
+        apiKey,
+        systemPrompt,
+        diff,
+        status,
+        log,
+        userContext
+      );
       spinner.stop();
-      
+
       showSuccess('Suggestion generated!');
       showSuggestion(suggestion);
       showTip('Copy and execute the commands above. xoegit never runs commands automatically.');
-      
-    } catch (error: any) {
+    } catch (error: unknown) {
       spinner.stop();
-      showError('Generation Failed', error.message);
+      showError('Generation Failed', (error as Error).message);
     }
-
-  } catch (error: any) {
-    showError('Unexpected Error', error.message);
+  } catch (error: unknown) {
+    showError('Unexpected Error', (error as Error).message);
     process.exit(1);
   }
 }

@@ -37,14 +37,14 @@
     "productivity"
   ],
   "scripts": {
-    "build": "tsc && mkdir -p dist/prompts/templates && cp src/prompts/templates/RULES.md dist/prompts/templates/RULES.md",
+    "build": "tsc -p tsconfig.build.json && mkdir -p dist/prompts/templates && cp src/prompts/templates/RULES.md dist/prompts/templates/RULES.md",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix",
-    "format": "prettier --write 'src/**/*.ts'",
-    "format:check": "prettier --check 'src/**/*.ts'",
+    "lint": "eslint src/ tests/",
+    "lint:fix": "eslint src/ tests/ --fix",
+    "format": "prettier --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'src/**/*.ts' 'tests/**/*.ts'",
     "prepare": "husky",
     "prepublishOnly": "npm run build && npm test"
   },

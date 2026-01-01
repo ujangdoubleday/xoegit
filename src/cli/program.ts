@@ -7,4 +7,7 @@ program
   .description('AI-powered git commit generator')
   .version('0.1.0')
   .option('-k, --api-key <key>', 'Gemini API Key')
-  .option('-c, --context <context>', 'Context for the changes (e.g., "refactoring folder structure")');
+  .option(
+    '-c, --context <context>',
+    'Context for the changes (e.g., "refactoring folder structure")'
+  );

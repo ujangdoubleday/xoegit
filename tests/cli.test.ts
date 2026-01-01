@@ -16,14 +16,14 @@ describe('CLI Program', () => {
 
   it('should have --api-key option', () => {
     const options = program.options;
-    const apiKeyOption = options.find(opt => opt.long === '--api-key');
+    const apiKeyOption = options.find((opt) => opt.long === '--api-key');
     expect(apiKeyOption).toBeDefined();
     expect(apiKeyOption?.short).toBe('-k');
   });
 
   it('should have --context option', () => {
     const options = program.options;
-    const contextOption = options.find(opt => opt.long === '--context');
+    const contextOption = options.find((opt) => opt.long === '--context');
     expect(contextOption).toBeDefined();
     expect(contextOption?.short).toBe('-c');
   });
