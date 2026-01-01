@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { GeminiModelName, getModelList } from './models.js';
 
 /**
@@ -12,18 +12,22 @@ function isRateLimitError(error: unknown): boolean {
 }
 
 /**
- * Generate content with a specific model
+ * Generate content with a specific model using the new Google GenAI SDK
  */
 async function tryGenerateWithModel(
-  genAI: GoogleGenerativeAI,
+  ai: GoogleGenAI,
   modelName: GeminiModelName,
   systemPrompt: string,
   userMessage: string
 ): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: modelName });
-  const result = await model.generateContent([{ text: systemPrompt }, { text: userMessage }]);
-  const response = await result.response;
-  return response.text();
+  const response = await ai.models.generateContent({
+    model: modelName,
+    contents: userMessage,
+    config: {
+      systemInstruction: systemPrompt,
+    },
+  });
+  return response.text ?? '';
 }
 
 /**
@@ -38,7 +42,7 @@ export async function generateCommitSuggestion(
   log: string,
   context: string = ''
 ): Promise<string> {
-  const genAI = new GoogleGenerativeAI(apiKey);
+  const ai = new GoogleGenAI({ apiKey });
 
   // Parse status to find untracked files
   let untrackedMsg = '';
@@ -89,7 +93,7 @@ Please suggest the git add command and the git commit message.
   // Try each model in order, fallback on rate limit
   for (const modelName of modelsToTry) {
     try {
-      const result = await tryGenerateWithModel(genAI, modelName, systemPrompt, userMessage);
+      const result = await tryGenerateWithModel(ai, modelName, systemPrompt, userMessage);
       return result;
     } catch (error: unknown) {
       if (isRateLimitError(error)) {
