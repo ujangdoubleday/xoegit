@@ -11,7 +11,7 @@ export async function generateSystemPrompt(): Promise<string> {
     const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
     const rulesPath = path.resolve(__dirname, './templates/RULES.md');
     rulesContent = await fs.readFile(rulesPath, 'utf-8');
-  } catch (error) {
+  } catch (_error) {
     console.warn('Could not read RULES.md, using default rules.');
     rulesContent = 'Follow conventional commits.';
   }

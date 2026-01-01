@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { 
-  GEMINI_MODELS, 
-  DEFAULT_MODEL, 
-  getModelName, 
-  getAvailableModels, 
-  getModelList 
+import {
+  GEMINI_MODELS,
+  DEFAULT_MODEL,
+  getModelName,
+  getAvailableModels,
+  getModelList,
 } from '../src/providers/models.js';
 
 describe('Models', () => {

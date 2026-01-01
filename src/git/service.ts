@@ -8,7 +8,7 @@ const git: SimpleGit = simpleGit();
 export async function isGitRepository(): Promise<boolean> {
   try {
     return await git.checkIsRepo();
-  } catch (error) {
+  } catch (_error) {
     return false;
   }
 }
@@ -27,7 +27,7 @@ export async function getGitStatus(): Promise<string> {
 export async function getGitDiff(): Promise<string> {
   const diff = await git.diff();
   const diffCached = await git.diff(['--cached']);
-  
+
   return `Unstaged Changes:\n${diff}\n\nStaged Changes:\n${diffCached}`;
 }
 
@@ -38,7 +38,7 @@ export async function getGitLog(maxCount: number = 5): Promise<string> {
   try {
     const log = await git.log({ maxCount });
     return JSON.stringify(log.all, null, 2);
-  } catch (error) {
-    return "No commits yet.";
+  } catch (_error) {
+    return 'No commits yet.';
   }
 }

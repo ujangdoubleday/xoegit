@@ -24,7 +24,7 @@ export class ConfigService {
       if (config.XOEGIT_GEMINI_API_KEY && isValidApiKey(config.XOEGIT_GEMINI_API_KEY)) {
         return config.XOEGIT_GEMINI_API_KEY;
       }
-    } catch (error) {
+    } catch (_error) {
       // Config file doesn't exist or is invalid, ignore
     }
 
@@ -40,14 +40,14 @@ export class ConfigService {
       try {
         const existing = await fs.readFile(this.configPath, 'utf-8');
         config = JSON.parse(existing);
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
 
       config.XOEGIT_GEMINI_API_KEY = apiKey;
       await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
-    } catch (error) {
-      throw new Error(`Failed to save configuration: ${(error as any).message}`);
+    } catch (error: unknown) {
+      throw new Error(`Failed to save configuration: ${(error as Error).message}`);
     }
   }
 }

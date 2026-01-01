@@ -19,12 +19,12 @@ export async function promptApiKey(): Promise<string> {
     if (process.stdin.setRawMode && process.stdout.isTTY) {
       process.stdin.setRawMode(true);
       process.stdin.resume();
-      
+
       let input = '';
-      
+
       const onData = (char: Buffer) => {
         const charStr = char.toString('utf-8');
-        
+
         // Enter key
         if (charStr === '\r' || charStr === '\n' || charStr === '\r\n') {
           process.stdin.setRawMode(false);
@@ -36,24 +36,24 @@ export async function promptApiKey(): Promise<string> {
             resolve(trimmedInput);
           } else {
             console.error('Invalid API Key format. Please try again.');
-            process.exit(1); 
+            process.exit(1);
           }
           return;
         }
-        
+
         // Ctrl+C
-        if (charStr === '\u0003') { 
+        if (charStr === '\u0003') {
           process.exit(1);
         }
-        
+
         // Backspace
-        if (charStr === '\u007f' || charStr === '\b') { 
+        if (charStr === '\u007f' || charStr === '\b') {
           if (input.length > 0) {
             input = input.slice(0, -1);
           }
           return;
         }
-        
+
         input += charStr;
       };
 
@@ -63,7 +63,7 @@ export async function promptApiKey(): Promise<string> {
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
-        terminal: false
+        terminal: false,
       });
 
       rl.question('', (answer) => {

@@ -12,7 +12,7 @@ describe('Config Constants', () => {
 
   it('should return platform-specific path', () => {
     const configPath = getConfigPath();
-    
+
     if (process.platform === 'win32') {
       expect(configPath).toContain('AppData');
     } else if (process.platform === 'darwin') {

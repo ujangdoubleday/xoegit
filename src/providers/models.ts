@@ -3,12 +3,12 @@
  */
 export const GEMINI_MODELS = {
   'flash-lite': 'gemini-2.5-flash-lite',
-  'flash': 'gemini-2.5-flash',
+  flash: 'gemini-2.5-flash',
   'flash-3': 'gemini-3-flash',
 } as const;
 
 export type GeminiModelKey = keyof typeof GEMINI_MODELS;
-export type GeminiModelName = typeof GEMINI_MODELS[GeminiModelKey];
+export type GeminiModelName = (typeof GEMINI_MODELS)[GeminiModelKey];
 
 /**
  * Default model to use
@@ -38,10 +38,7 @@ export function getAvailableModels(): string[] {
 export function getModelList(): GeminiModelName[] {
   const defaultModelName = GEMINI_MODELS[DEFAULT_MODEL];
   const allModels = Object.values(GEMINI_MODELS);
-  
+
   // Put default model first, then the rest
-  return [
-    defaultModelName,
-    ...allModels.filter(m => m !== defaultModelName)
-  ];
+  return [defaultModelName, ...allModels.filter((m) => m !== defaultModelName)];
 }
