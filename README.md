@@ -22,7 +22,7 @@
 
 ### Prerequisites
 
-- **Node.js**: Version 20.19.5 or higher
+- **Node.js**: Minimum version 20.19.5 or higher
 - **Git**: Must be installed and available in your PATH
 - **API Key**: A Google Gemini API key ([get one here](https://aistudio.google.com/))
 
