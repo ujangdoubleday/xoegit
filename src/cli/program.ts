@@ -10,4 +10,5 @@ program
   .option(
     '-c, --context <context>',
     'Context for the changes (e.g., "refactoring folder structure")'
-  );
+  )
+  .option('-s, --set-key <key>', 'Save Gemini API Key to config (overwrites existing)');
