@@ -18,6 +18,12 @@
 - **Semantic Commits** — Strictly follows [Conventional Commits](https://www.conventionalcommits.org/)
 - **PR Ready** — Generates ready-to-use PR title and description
 
+## How It Works
+
+> **Important:** `xoegit` **never** stages your files, commits your changes, or modifies your repository in any way. It only analyzes your changes and provides recommendations that you can review and execute yourself.
+
+You remain in full control of your git workflow.
+
 ## Installation
 
 ### Prerequisites
