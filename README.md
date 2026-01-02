@@ -44,9 +44,11 @@ make
 
 Simply run `xoegit` for the first time. It will prompt you for your API Key securely and save it locally.
 
-> **Security Note:** Your API key is stored locally on your device only. We do not collect, store, or have access to your API key.
+> **Security Note:** Your API key is stored locally on your device only. We do not collect, store, or have access to your API key. See [Security Policy](SECURITY.md) for details.
 
 ## Usage
+
+Then, from whatever project you're working on, just run:
 
 ```bash
 xoegit
@@ -60,19 +62,38 @@ xoegit
 | ---------------------- | --------------------------------------------- |
 | `-k, --api-key <key>`  | Use specific API key for this session         |
 | `-c, --context <text>` | Provide context for more accurate suggestions |
+| `-s, --set-key <key>`  | Save API key to config
+| `-d, --delete-key`     | Delete saved API key from config              |
 | `-V, --version`        | Show version                                  |
 | `-h, --help`           | Show help                                     |
 
 ### Examples
 
-```bash
-# Basic usage
-xoegit
+**Basic usage:**
 
-# With context for better commit type detection
+```bash
+xoegit
+```
+
+**With context for better commit type detection:**
+
+```bash
 xoegit --context "refactoring folder structure"
 xoegit -c "fixing authentication bug"
 xoegit -c "adding new payment feature"
+```
+
+**Use API key for this session only (not saved):**
+
+```bash
+xoegit --api-key "YOUR_GEMINI_API_KEY"
+```
+
+**Manage API key:**
+
+```bash
+xoegit --set-key "YOUR_GEMINI_API_KEY"
+xoegit --delete-key
 ```
 
 ### Sample Output
@@ -96,18 +117,6 @@ pr description: feat(auth): implement secure login
 - refactor(utils): improve error logging
 ```
 
-## Smart Model Fallback
-
-xoegit uses multiple Gemini models with automatic fallback:
-
-| Model                   | Priority      |
-| ----------------------- | ------------- |
-| `gemini-2.5-flash-lite` | 1st (default) |
-| `gemini-2.5-flash`      | 2nd           |
-| `gemini-3-flash`        | 3rd           |
-
-When one model hits its rate limit, xoegit automatically tries the next one.
-
 ## Troubleshooting
 
 ### "Current directory is not a git repository"
@@ -129,9 +138,12 @@ npm run build
 
 # Run tests
 npm test
+```
 
-# Watch mode for tests
-npm run test:watch
+**or** use `make`:
+
+```bash
+make
 ```
 
 ## Project Structure

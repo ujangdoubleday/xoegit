@@ -41,7 +41,10 @@ When using xoegit:
 
 xoegit stores your Gemini API key locally on your device. We do not collect, transmit, or have access to your API key.
 
-- Keys are stored in your user's home directory
+- Keys are stored in your user's home directory:
+  - **Linux**: `~/.config/xoegit/config.json`
+  - **macOS**: `~/Library/Application Support/xoegit/config.json`
+  - **Windows**: `%APPDATA%\xoegit\config.json`
 - Keys are never included in git operations or transmitted over the network (except to Google's API)
 
 Thank you for helping keep xoegit secure!
