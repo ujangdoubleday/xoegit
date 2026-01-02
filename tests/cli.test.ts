@@ -34,4 +34,11 @@ describe('CLI Program', () => {
     expect(setKeyOption).toBeDefined();
     expect(setKeyOption?.short).toBe('-s');
   });
+
+  it('should have --delete-key option', () => {
+    const options = program.options;
+    const deleteKeyOption = options.find((opt) => opt.long === '--delete-key');
+    expect(deleteKeyOption).toBeDefined();
+    expect(deleteKeyOption?.short).toBe('-d');
+  });
 });
