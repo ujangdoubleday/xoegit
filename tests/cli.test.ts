@@ -27,4 +27,11 @@ describe('CLI Program', () => {
     expect(contextOption).toBeDefined();
     expect(contextOption?.short).toBe('-c');
   });
+
+  it('should have --set-key option', () => {
+    const options = program.options;
+    const setKeyOption = options.find((opt) => opt.long === '--set-key');
+    expect(setKeyOption).toBeDefined();
+    expect(setKeyOption?.short).toBe('-s');
+  });
 });

@@ -31,6 +31,17 @@ export async function analyzeAction(): Promise<void> {
 
     const configService = new ConfigService();
 
+    // Handle --set-key flag (save and exit)
+    if (options.setKey) {
+      if (!isValidApiKey(options.setKey)) {
+        showError('Invalid API Key', 'Please provide a valid API key.');
+        process.exit(1);
+      }
+      await configService.saveApiKey(options.setKey);
+      showSuccess('API Key saved successfully!');
+      return;
+    }
+
     if (!apiKey) {
       apiKey = await configService.getApiKey();
     }
