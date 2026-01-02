@@ -50,4 +50,24 @@ export class ConfigService {
       throw new Error(`Failed to save configuration: ${(error as Error).message}`);
     }
   }
+
+  async deleteApiKey(): Promise<void> {
+    try {
+      const configStr = await fs.readFile(this.configPath, 'utf-8');
+      const config = JSON.parse(configStr) as XoegitConfig;
+      delete config.XOEGIT_GEMINI_API_KEY;
+
+      if (Object.keys(config).length === 0) {
+        // Delete the file if no other config remains
+        await fs.unlink(this.configPath);
+      } else {
+        await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
+      }
+    } catch (error: unknown) {
+      // Ignore if file doesn't exist
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        throw new Error(`Failed to delete API key: ${(error as Error).message}`);
+      }
+    }
+  }
 }
