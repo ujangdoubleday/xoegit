@@ -42,6 +42,13 @@ export async function analyzeAction(): Promise<void> {
       return;
     }
 
+    // Handle --delete-key flag (delete and exit)
+    if (options.deleteKey) {
+      await configService.deleteApiKey();
+      showSuccess('API Key deleted successfully!');
+      return;
+    }
+
     if (!apiKey) {
       apiKey = await configService.getApiKey();
     }
