@@ -19,9 +19,16 @@ const brand = {
  * App banner
  */
 export function showBanner(): void {
-  console.log(
-    `\n${brand.primary('⚡')} ${brand.secondary.bold('xoegit')} ${brand.muted('— AI-powered commit generator')}\n`
-  );
+  const banner = `
+██╗      ██╗  ██╗ ██████╗ ███████╗ ██████╗ ██╗████████╗
+╚██╗     ╚██╗██╔╝██╔═══██╗██╔════╝██╔════╝ ██║╚══██╔══╝
+ ╚██╗     ╚███╔╝ ██║   ██║█████╗  ██║  ███╗██║   ██║   
+ ██╔╝     ██╔██╗ ██║   ██║██╔══╝  ██║   ██║██║   ██║   
+██╔╝     ██╔╝ ██╗╚██████╔╝███████╗╚██████╔╝██║   ██║   
+╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚══════╝ ╚═════╝ ╚═╝   ╚═╝   
+`;
+  console.log(banner);
+  console.log(brand.muted('by https://github.com/ujangdoubleday\n'));
 }
 
 /**
