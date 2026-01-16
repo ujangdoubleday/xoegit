@@ -15,6 +15,7 @@
 ## Features
 
 - **Atomic Commits** — Automatically suggests splitting large changes into multiple logical commits
+- **Execute Mode** — Optionally execute commits with confirmation using `--execute`
 - **Context Aware** — Provide context with `--context` for more accurate commit messages
 - **Smart Fallback** — Automatically switches between Gemini models when rate limits are hit
 - **Semantic Commits** — Strictly follows [Conventional Commits](https://www.conventionalcommits.org/)
@@ -22,7 +23,9 @@
 
 ## How It Works
 
-> **Important:** `xoegit` **never** stages your files, commits your changes, or modifies your repository in any way. It only analyzes your changes and provides recommendations that you can review and execute yourself.
+> **Important:** By default, `xoegit` **never** stages your files, commits your changes, or modifies your repository in any way. It only analyzes your changes and provides recommendations that you can review and execute yourself.
+>
+> With the `--execute` flag, you can optionally let `xoegit` execute the suggested commits after your explicit confirmation.
 
 You remain in full control of your git workflow.
 
@@ -66,14 +69,15 @@ xoegit
 
 ### Options
 
-| Option                 | Description                                   |
-| ---------------------- | --------------------------------------------- |
-| `-k, --api-key <key>`  | Use specific API key for this session         |
-| `-c, --context <text>` | Provide context for more accurate suggestions |
-| `-s, --set-key <key>`  | Save API key to config
-| `-d, --delete-key`     | Delete saved API key from config              |
-| `-V, --version`        | Show version                                  |
-| `-h, --help`           | Show help                                     |
+| Option                 | Description                                         |
+| ---------------------- | --------------------------------------------------- |
+| `-k, --api-key <key>`  | Use specific API key for this session               |
+| `-c, --context <text>` | Provide context for more accurate suggestions       |
+| `-e, --execute`        | Execute commits after confirmation prompt           |
+| `-s, --set-key <key>`  | Save API key to config                              |
+| `-d, --delete-key`     | Delete saved API key from config                    |
+| `-V, --version`        | Show version                                        |
+| `-h, --help`           | Show help                                           |
 
 ### Examples
 
@@ -104,6 +108,14 @@ xoegit --set-key "YOUR_GEMINI_API_KEY"
 xoegit --delete-key
 ```
 
+**Execute mode (auto-commit with confirmation):**
+
+```bash
+xoegit --execute
+xoegit -e
+xoegit -e -c "fixing critical bug"
+```
+
 ### Sample Output
 
 ```
@@ -123,6 +135,23 @@ pr title: feat(auth): implement secure login
 pr description: feat(auth): implement secure login
 - feat(auth): add login validation
 - refactor(utils): improve error logging
+```
+
+### Execute Mode Output
+
+```
+ℹ Execute mode enabled. 2 commit(s) will be created.
+Do you want to execute these commands? (y/n): y
+✔ [1/2] a1b2c3d feat(auth): add login validation
+└─ src/
+   └─ auth/
+      └─ login.ts
+✔ [2/2] e4f5g6h refactor(utils): improve error logging
+└─ src/
+   └─ utils/
+      └─ logger.ts
+
+✓ All 2 commit(s) executed successfully!
 ```
 
 ## Troubleshooting
