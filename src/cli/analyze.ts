@@ -156,71 +156,89 @@ export async function analyzeAction(): Promise<void> {
 }
 
 /**
- * Parse git add files from suggestion
+ * Represents a single commit operation with files to add and commit message
  */
-function parseGitAddFiles(suggestion: string): string[] {
-  const files: string[] = [];
+interface CommitOperation {
+  files: string[];
+  message: string;
+}
+
+/**
+ * Parse all commit operations from suggestion
+ * Each "commit N" section contains git add and git commit commands
+ */
+function parseCommitOperations(suggestion: string): CommitOperation[] {
+  const operations: CommitOperation[] = [];
   const lines = suggestion.split('\n');
+
+  let currentFiles: string[] = [];
+  let currentMessage: string | null = null;
 
   for (const line of lines) {
     const trimmed = line.trim();
+
+    // Check for commit section header (e.g., "commit 1", "commit 2")
+    if (trimmed.match(/^commit\s+\d+$/i)) {
+      // Save previous operation if complete
+      if (currentFiles.length > 0 && currentMessage) {
+        operations.push({ files: [...currentFiles], message: currentMessage });
+      }
+      // Reset for new commit
+      currentFiles = [];
+      currentMessage = null;
+      continue;
+    }
+
+    // Parse git add command
     if (trimmed.startsWith('git add ')) {
-      // Extract files after 'git add '
       const filesStr = trimmed.slice(8).trim();
-      // Handle quoted paths and multiple files
       const matches = filesStr.match(/(?:[^\s"]+|"[^"]*")+/g);
       if (matches) {
-        files.push(...matches.map((f) => f.replace(/^"|"$/g, '')));
+        currentFiles.push(...matches.map((f) => f.replace(/^"|"$/g, '')));
       }
+      continue;
     }
-  }
 
-  return files;
-}
-
-/**
- * Parse commit message from suggestion
- */
-function parseCommitMessage(suggestion: string): string | null {
-  const lines = suggestion.split('\n');
-
-  for (const line of lines) {
-    const trimmed = line.trim();
+    // Parse git commit command
     if (trimmed.startsWith('git commit -m ')) {
-      // Extract message between quotes
       const match = trimmed.match(/git commit -m ["'](.+)["']/);
       if (match) {
-        return match[1];
+        currentMessage = match[1];
       }
+      continue;
     }
   }
 
-  return null;
+  // Don't forget the last operation
+  if (currentFiles.length > 0 && currentMessage) {
+    operations.push({ files: [...currentFiles], message: currentMessage });
+  }
+
+  return operations;
 }
 
 /**
- * Handle execute mode - prompt user and execute git commands
+ * Handle execute mode - prompt user and execute git commands for all commits
  */
 async function handleExecuteMode(suggestion: string): Promise<void> {
-  const files = parseGitAddFiles(suggestion);
-  const commitMessage = parseCommitMessage(suggestion);
+  const operations = parseCommitOperations(suggestion);
 
-  if (files.length === 0 && !commitMessage) {
+  if (operations.length === 0) {
     showWarning('Could not parse git commands from suggestion.');
     showTip('Copy and execute the commands manually.');
     return;
   }
 
   console.log('');
-  showInfo('Execute mode enabled. The following commands will be executed:');
-
-  if (files.length > 0) {
-    console.log(`  git add ${files.join(' ')}`);
-  }
-  if (commitMessage) {
-    console.log(`  git commit -m "${commitMessage}"`);
-  }
+  showInfo(`Execute mode enabled. ${operations.length} commit(s) will be created:`);
   console.log('');
+
+  operations.forEach((op, index) => {
+    console.log(`  Commit ${index + 1}:`);
+    console.log(`    git add ${op.files.join(' ')}`);
+    console.log(`    git commit -m "${op.message}"`);
+    console.log('');
+  });
 
   const confirmed = await promptConfirm('Do you want to execute these commands?');
 
@@ -230,27 +248,30 @@ async function handleExecuteMode(suggestion: string): Promise<void> {
   }
 
   try {
-    if (files.length > 0) {
+    for (let i = 0; i < operations.length; i++) {
+      const op = operations[i];
+      const commitNum = i + 1;
+
+      // Add files
       const addSpinner = ora({
-        text: 'Adding files...',
+        text: `[${commitNum}/${operations.length}] Adding files...`,
         spinner: 'dots12',
       }).start();
 
-      await executeGitAdd(files);
-      addSpinner.succeed('Files added successfully!');
-    }
+      await executeGitAdd(op.files);
+      addSpinner.succeed(`[${commitNum}/${operations.length}] Files added: ${op.files.join(', ')}`);
 
-    if (commitMessage) {
+      // Create commit
       const commitSpinner = ora({
-        text: 'Creating commit...',
+        text: `[${commitNum}/${operations.length}] Creating commit...`,
         spinner: 'dots12',
       }).start();
 
-      const commitHash = await executeGitCommit(commitMessage);
-      commitSpinner.succeed(`Commit created: ${commitHash}`);
+      const commitHash = await executeGitCommit(op.message);
+      commitSpinner.succeed(`[${commitNum}/${operations.length}] Commit created: ${commitHash}`);
     }
 
-    showSuccess('\n🎉 All commands executed successfully!');
+    showSuccess(`\n🎉 All ${operations.length} commit(s) executed successfully!`);
   } catch (error: unknown) {
     showError('Execution Failed', (error as Error).message);
   }
