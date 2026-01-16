@@ -42,3 +42,18 @@ export async function getGitLog(maxCount: number = 5): Promise<string> {
     return 'No commits yet.';
   }
 }
+
+/**
+ * Execute git add with specified files
+ */
+export async function executeGitAdd(files: string[]): Promise<void> {
+  await git.add(files);
+}
+
+/**
+ * Execute git commit with specified message
+ */
+export async function executeGitCommit(message: string): Promise<string> {
+  const result = await git.commit(message);
+  return result.commit;
+}

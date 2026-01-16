@@ -73,3 +73,55 @@ export async function promptApiKey(): Promise<string> {
     }
   });
 }
+
+/**
+ * Prompts user for yes/no confirmation
+ */
+export async function promptConfirm(message: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    process.stdout.write(`${message} (y/n): `);
+
+    if (process.stdin.setRawMode && process.stdout.isTTY) {
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+
+      const onData = (char: Buffer) => {
+        const charStr = char.toString('utf-8').toLowerCase();
+
+        // Ctrl+C
+        if (charStr === '\u0003') {
+          process.stdout.write('\n');
+          process.stdin.setRawMode(false);
+          process.stdin.removeListener('data', onData);
+          process.stdin.pause();
+          resolve(false);
+          return;
+        }
+
+        if (charStr === 'y' || charStr === 'n') {
+          process.stdout.write(charStr + '\n');
+          process.stdin.setRawMode(false);
+          process.stdin.removeListener('data', onData);
+          process.stdin.pause();
+          resolve(charStr === 'y');
+          return;
+        }
+      };
+
+      process.stdin.on('data', onData);
+    } else {
+      // Fallback for non-TTY environments
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        terminal: false,
+      });
+
+      rl.question('', (answer) => {
+        rl.close();
+        const normalized = answer.trim().toLowerCase();
+        resolve(normalized === 'y' || normalized === 'yes');
+      });
+    }
+  });
+}

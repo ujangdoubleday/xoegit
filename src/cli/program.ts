@@ -13,4 +13,5 @@ program
     'Context for the changes (e.g., "refactoring folder structure")'
   )
   .option('-s, --set-key <key>', 'Save Gemini API Key to config (overwrites existing)')
-  .option('-d, --delete-key', 'Delete saved API Key from config');
+  .option('-d, --delete-key', 'Delete saved API Key from config')
+  .option('-e, --execute', 'Execute commit after confirmation prompt');
