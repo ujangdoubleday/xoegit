@@ -4,6 +4,7 @@ import { ConfigService } from '../config/index.js';
 import {
   isValidApiKey,
   promptApiKey,
+  promptConfirm,
   showBanner,
   showSuggestion,
   showSuccess,
@@ -13,7 +14,14 @@ import {
   showTip,
   spinnerText,
 } from '../utils/index.js';
-import { getGitDiff, getGitLog, getGitStatus, isGitRepository } from '../git/index.js';
+import {
+  getGitDiff,
+  getGitLog,
+  getGitStatus,
+  isGitRepository,
+  executeGitAdd,
+  executeGitCommit,
+} from '../git/index.js';
 import { generateSystemPrompt } from '../prompts/index.js';
 import { generateCommitSuggestion } from '../providers/index.js';
 
@@ -130,7 +138,13 @@ export async function analyzeAction(): Promise<void> {
 
       showSuccess('Suggestion generated!');
       showSuggestion(suggestion);
-      showTip('Copy and execute the commands above. xoegit never runs commands automatically.');
+
+      // Handle -e (execute) flag
+      if (options.execute) {
+        await handleExecuteMode(suggestion);
+      } else {
+        showTip('Copy and execute the commands above. xoegit never runs commands automatically.');
+      }
     } catch (error: unknown) {
       spinner.stop();
       showError('Generation Failed', (error as Error).message);
@@ -138,5 +152,106 @@ export async function analyzeAction(): Promise<void> {
   } catch (error: unknown) {
     showError('Unexpected Error', (error as Error).message);
     process.exit(1);
+  }
+}
+
+/**
+ * Parse git add files from suggestion
+ */
+function parseGitAddFiles(suggestion: string): string[] {
+  const files: string[] = [];
+  const lines = suggestion.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('git add ')) {
+      // Extract files after 'git add '
+      const filesStr = trimmed.slice(8).trim();
+      // Handle quoted paths and multiple files
+      const matches = filesStr.match(/(?:[^\s"]+|"[^"]*")+/g);
+      if (matches) {
+        files.push(...matches.map((f) => f.replace(/^"|"$/g, '')));
+      }
+    }
+  }
+
+  return files;
+}
+
+/**
+ * Parse commit message from suggestion
+ */
+function parseCommitMessage(suggestion: string): string | null {
+  const lines = suggestion.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('git commit -m ')) {
+      // Extract message between quotes
+      const match = trimmed.match(/git commit -m ["'](.+)["']/);
+      if (match) {
+        return match[1];
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Handle execute mode - prompt user and execute git commands
+ */
+async function handleExecuteMode(suggestion: string): Promise<void> {
+  const files = parseGitAddFiles(suggestion);
+  const commitMessage = parseCommitMessage(suggestion);
+
+  if (files.length === 0 && !commitMessage) {
+    showWarning('Could not parse git commands from suggestion.');
+    showTip('Copy and execute the commands manually.');
+    return;
+  }
+
+  console.log('');
+  showInfo('Execute mode enabled. The following commands will be executed:');
+
+  if (files.length > 0) {
+    console.log(`  git add ${files.join(' ')}`);
+  }
+  if (commitMessage) {
+    console.log(`  git commit -m "${commitMessage}"`);
+  }
+  console.log('');
+
+  const confirmed = await promptConfirm('Do you want to execute these commands?');
+
+  if (!confirmed) {
+    showInfo('Execution cancelled.');
+    return;
+  }
+
+  try {
+    if (files.length > 0) {
+      const addSpinner = ora({
+        text: 'Adding files...',
+        spinner: 'dots12',
+      }).start();
+
+      await executeGitAdd(files);
+      addSpinner.succeed('Files added successfully!');
+    }
+
+    if (commitMessage) {
+      const commitSpinner = ora({
+        text: 'Creating commit...',
+        spinner: 'dots12',
+      }).start();
+
+      const commitHash = await executeGitCommit(commitMessage);
+      commitSpinner.succeed(`Commit created: ${commitHash}`);
+    }
+
+    showSuccess('\n🎉 All commands executed successfully!');
+  } catch (error: unknown) {
+    showError('Execution Failed', (error as Error).message);
   }
 }
