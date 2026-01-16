@@ -230,15 +230,7 @@ async function handleExecuteMode(suggestion: string): Promise<void> {
   }
 
   console.log('');
-  showInfo(`Execute mode enabled. ${operations.length} commit(s) will be created:`);
-  console.log('');
-
-  operations.forEach((op, index) => {
-    console.log(`  Commit ${index + 1}:`);
-    console.log(`    git add ${op.files.join(' ')}`);
-    console.log(`    git commit -m "${op.message}"`);
-    console.log('');
-  });
+  showInfo(`Execute mode enabled. ${operations.length} commit(s) will be created.`);
 
   const confirmed = await promptConfirm('Do you want to execute these commands?');
 
@@ -252,27 +244,86 @@ async function handleExecuteMode(suggestion: string): Promise<void> {
       const op = operations[i];
       const commitNum = i + 1;
 
-      // Add files
-      const addSpinner = ora({
-        text: `[${commitNum}/${operations.length}] Adding files...`,
-        spinner: 'dots12',
-      }).start();
-
+      // Add files silently
       await executeGitAdd(op.files);
-      addSpinner.succeed(`[${commitNum}/${operations.length}] Files added: ${op.files.join(', ')}`);
 
-      // Create commit
+      // Create commit with spinner
       const commitSpinner = ora({
         text: `[${commitNum}/${operations.length}] Creating commit...`,
         spinner: 'dots12',
       }).start();
 
       const commitHash = await executeGitCommit(op.message);
-      commitSpinner.succeed(`[${commitNum}/${operations.length}] Commit created: ${commitHash}`);
+      const shortHash = commitHash.slice(0, 7);
+      commitSpinner.succeed(`[${commitNum}/${operations.length}] ${shortHash} ${op.message}`);
+
+      // Display file tree
+      printFileTree(op.files);
     }
 
-    showSuccess(`\n🎉 All ${operations.length} commit(s) executed successfully!`);
+    console.log('');
+    showSuccess(`All ${operations.length} commit(s) executed successfully!`);
   } catch (error: unknown) {
     showError('Execution Failed', (error as Error).message);
   }
+}
+
+/**
+ * Print files in a tree format similar to husky
+ */
+function printFileTree(files: string[]): void {
+  // Sort files for consistent display
+  const sortedFiles = [...files].sort();
+
+  // Build tree structure
+  const tree: TreeNodeType = {};
+
+  for (const file of sortedFiles) {
+    const parts = file.split('/');
+    let current: TreeNodeType = tree;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      const isLast = i === parts.length - 1;
+
+      if (isLast) {
+        current[part] = null; // File (leaf node)
+      } else {
+        if (!current[part]) {
+          current[part] = {};
+        }
+        current = current[part] as TreeNodeType;
+      }
+    }
+  }
+
+  // Print tree
+  const lines: string[] = [];
+  printTreeNode(tree, '', lines);
+
+  for (const line of lines) {
+    console.log(line);
+  }
+}
+
+/**
+ * Recursively print tree nodes
+ */
+type TreeNodeType = { [key: string]: TreeNodeType | null };
+
+function printTreeNode(node: TreeNodeType, prefix: string, lines: string[]): void {
+  const entries = Object.entries(node);
+
+  entries.forEach(([name, children], index) => {
+    const isLast = index === entries.length - 1;
+    const connector = isLast ? '└─' : '├─';
+    const isDir = children !== null;
+
+    lines.push(`${prefix}${connector} ${name}${isDir ? '/' : ''}`);
+
+    if (isDir) {
+      const newPrefix = prefix + (isLast ? '   ' : '│  ');
+      printTreeNode(children, newPrefix, lines);
+    }
+  });
 }
