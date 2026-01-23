@@ -17,6 +17,7 @@
 - **Atomic Commits** — Automatically suggests splitting large changes into multiple logical commits
 - **Execute Mode** — Optionally execute commits with confirmation using `--execute`
 - **Context Aware** — Provide context with `--context` for more accurate commit messages
+- **Explain Mode** — Learn commit crafting with `--explain` to see reasoning behind each grouping
 - **Smart Fallback** — Automatically switches between Gemini models when rate limits are hit
 - **Semantic Commits** — Strictly follows [Conventional Commits](https://www.conventionalcommits.org/)
 - **PR Ready** — Generates ready-to-use PR title and description
@@ -37,13 +38,19 @@ You remain in full control of your git workflow.
 - **Git**: Must be installed and available in your PATH
 - **API Key**: A Google Gemini API key ([get one here](https://aistudio.google.com/))
 
-### Install
+### Quick Start
+
+```bash
+npx xoegit
+```
+
+### Global Installation (Optional)
 
 ```bash
 npm install -g xoegit
 ```
 
-**or** install from source:
+### Install from Source 
 
 ```bash
 git clone git@github.com:ujangdoubleday/xoegit.git
@@ -59,7 +66,13 @@ Simply run `xoegit` for the first time. It will prompt you for your API Key secu
 
 ## Usage
 
-Then, from whatever project you're working on, just run:
+From any git repository, just run:
+
+```bash
+npx xoegit
+```
+
+**or** if installed globally:
 
 ```bash
 xoegit
@@ -74,6 +87,7 @@ xoegit
 | `-k, --api-key <key>`  | Use specific API key for this session               |
 | `-c, --context <text>` | Provide context for more accurate suggestions       |
 | `-e, --execute`        | Execute commits after confirmation prompt           |
+| `--explain`            | Show reasoning behind each commit grouping          |
 | `-s, --set-key <key>`  | Save API key to config                              |
 | `-d, --delete-key`     | Delete saved API key from config                    |
 | `-V, --version`        | Show version                                        |
@@ -84,36 +98,41 @@ xoegit
 **Basic usage:**
 
 ```bash
-xoegit
+npx xoegit
 ```
 
 **With context for better commit type detection:**
 
 ```bash
-xoegit --context "refactoring folder structure"
-xoegit -c "fixing authentication bug"
-xoegit -c "adding new payment feature"
+npx xoegit --context "refactoring folder structure"
+npx xoegit -c "fixing authentication bug"
+npx xoegit -c "adding new payment feature"
 ```
 
-**Use API key for this session only (not saved):**
-
 ```bash
-xoegit --api-key "YOUR_GEMINI_API_KEY"
+npx xoegit --api-key "YOUR_GEMINI_API_KEY"
 ```
 
 **Manage API key:**
 
 ```bash
-xoegit --set-key "YOUR_GEMINI_API_KEY"
-xoegit --delete-key
+npx xoegit --set-key "YOUR_GEMINI_API_KEY"
+npx xoegit --delete-key
 ```
 
 **Execute mode (auto-commit with confirmation):**
 
 ```bash
-xoegit --execute
-xoegit -e
-xoegit -e -c "fixing critical bug"
+npx xoegit --execute
+npx xoegit -e
+npx xoegit -e -c "fixing critical bug"
+```
+
+**Explain mode (verbose reasoning):**
+
+```bash
+npx xoegit --explain
+npx xoegit --explain -c "refactoring auth module"
 ```
 
 ### Sample Output
@@ -135,6 +154,20 @@ pr title: feat(auth): implement secure login
 pr description: feat(auth): implement secure login
 - feat(auth): add login validation
 - refactor(utils): improve error logging
+```
+
+### Explain Mode Output
+
+```
+commit 1
+git add src/auth/login.ts src/auth/validator.ts
+git commit -m "feat(auth): add login validation"
+why: I grouped these files because they both handle authentication logic and the validator is directly used by login.ts.
+
+commit 2
+git add package.json package-lock.json
+git commit -m "chore: update dependencies"
+why: I separated dependency updates from code changes to keep the commit atomic and make it easy to revert if needed.
 ```
 
 ### Execute Mode Output
