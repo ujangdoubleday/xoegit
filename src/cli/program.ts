@@ -14,4 +14,5 @@ program
   )
   .option('-s, --set-key <key>', 'Save Gemini API Key to config (overwrites existing)')
   .option('-d, --delete-key', 'Delete saved API Key from config')
-  .option('-e, --execute', 'Execute commit after confirmation prompt');
+  .option('-e, --execute', 'Execute commit after confirmation prompt')
+  .option('--explain', 'Show explanation for each commit grouping (verbose mode)');
