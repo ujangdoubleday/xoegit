@@ -114,7 +114,7 @@ export async function analyzeAction(): Promise<void> {
     }
 
     // 3. Generate Prompt
-    const systemPrompt = await generateSystemPrompt();
+    const systemPrompt = await generateSystemPrompt({ explain: options.explain });
 
     // Get user context if provided
     const userContext = options.context || '';

@@ -60,6 +60,10 @@ function formatSuggestionLine(line: string): string {
   if (line.startsWith('pr title:') || line.startsWith('pr description:')) {
     return chalk.yellow(line);
   }
+  // Format explanation lines from --explain mode
+  if (line.startsWith('why:')) {
+    return brand.muted('   ') + chalk.italic.hex('#A78BFA')(line);
+  }
   return line;
 }
 
