@@ -1,4 +1,5 @@
 import ora from 'ora';
+import chalk from 'chalk';
 import { program } from './program.js';
 import { ConfigService } from '../config/index.js';
 import {
@@ -244,8 +245,12 @@ async function handleExecuteMode(suggestion: string): Promise<void> {
       const op = operations[i];
       const commitNum = i + 1;
 
-      // Add files silently
+      // Add files
       await executeGitAdd(op.files);
+
+      // Display file tree
+      console.log(chalk.cyan(`\n📦 Staging files for commit ${commitNum}:`));
+      const treeLinesCount = printFileTree(op.files) + 2; // +2 for the header with \n
 
       // Create commit with spinner
       const commitSpinner = ora({
@@ -255,10 +260,19 @@ async function handleExecuteMode(suggestion: string): Promise<void> {
 
       const commitHash = await executeGitCommit(op.message);
       const shortHash = commitHash.slice(0, 7);
-      commitSpinner.succeed(`[${commitNum}/${operations.length}] ${shortHash} ${op.message}`);
 
-      // Display file tree
-      printFileTree(op.files);
+      commitSpinner.stop();
+
+      // Clear tree and spinner message
+      if (treeLinesCount > 0) {
+        // Move up (treeLinesCount + 1 line for spinner) and clear everything below
+        process.stdout.write(`\x1b[${treeLinesCount + 1}A\x1b[J`);
+      } else {
+        // Just clear the spinner line if no tree
+        process.stdout.write('\x1b[1A\x1b[J');
+      }
+
+      showSuccess(`[${commitNum}/${operations.length}] ${shortHash} ${op.message}`);
     }
 
     console.log('');
@@ -270,8 +284,11 @@ async function handleExecuteMode(suggestion: string): Promise<void> {
 
 /**
  * Print files in a tree format similar to husky
+ * @returns Total number of lines printed
  */
-function printFileTree(files: string[]): void {
+function printFileTree(files: string[]): number {
+  if (files.length === 0) return 0;
+
   // Sort files for consistent display
   const sortedFiles = [...files].sort();
 
@@ -304,6 +321,8 @@ function printFileTree(files: string[]): void {
   for (const line of lines) {
     console.log(line);
   }
+
+  return lines.length;
 }
 
 /**
