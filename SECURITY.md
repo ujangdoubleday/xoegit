@@ -39,12 +39,26 @@ When using xoegit:
 
 ## API Key Security
 
-xoegit stores your Gemini API key locally on your device. We do not collect, transmit, or have access to your API key.
+xoegit stores your Gemini API key locally on your device with encryption. We do not collect, transmit, or have access to your API key.
 
-- Keys are stored in your user's home directory:
-  - **Linux**: `~/.config/xoegit/config.json`
-  - **macOS**: `~/Library/Application Support/xoegit/config.json`
-  - **Windows**: `%APPDATA%\xoegit\config.json`
+### Encryption Details
+
+- **Algorithm**: AES-256-GCM (authenticated encryption)
+- **Key Derivation**: Machine-specific key derived from system properties (hostname, home directory, platform) using SHA-256
+- **Format**: `enc:v1:<iv>:<authTag>:<ciphertext>` (base64 encoded)
+- **File Permissions**: Config file is created with mode `0600` (owner read/write only)
+
+### Storage Locations
+
+- **Linux**: `~/.config/xoegit/config.json`
+- **macOS**: `~/Library/Application Support/xoegit/config.json`
+- **Windows**: `%APPDATA%\xoegit\config.json`
+
+### Security Notes
+
+- Keys are encrypted at rest and never stored in plain text
+- Encryption is automatic — no password required from users
 - Keys are never included in git operations or transmitted over the network (except to Google's API)
+- Existing plain text keys are automatically migrated to encrypted format
 
 Thank you for helping keep xoegit secure!
