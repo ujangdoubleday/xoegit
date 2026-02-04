@@ -21,6 +21,7 @@
 - **Smart Fallback** — Automatically switches between Gemini models when rate limits are hit
 - **Semantic Commits** — Strictly follows [Conventional Commits](https://www.conventionalcommits.org/)
 - **PR Ready** — Generates ready-to-use PR title and description
+- **Encrypted Storage** — API keys are automatically encrypted using AES-256-GCM
 
 ## How It Works
 
@@ -62,7 +63,7 @@ make
 
 Simply run `xoegit` for the first time. It will prompt you for your API Key securely and save it locally.
 
-> **Security Note:** Your API key is stored locally on your device only. We do not collect, store, or have access to your API key. See [Security Policy](SECURITY.md) for details.
+> **Security Note:** Your API key is stored locally and encrypted using AES-256-GCM. We do not collect, store, or have access to your API key. See [Security Policy](SECURITY.md) for details.
 
 ## Usage
 
