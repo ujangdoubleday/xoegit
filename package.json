@@ -37,7 +37,7 @@
     "productivity"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && mkdir -p dist/prompts/templates && cp src/prompts/templates/RULES.md dist/prompts/templates/RULES.md",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",

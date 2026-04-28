@@ -1,6 +1,4 @@
-import fs from 'fs/promises';
-import path from 'path';
-import url from 'url';
+import { RULES_CONTENT } from './rules.js';
 
 /**
  * Options for generating system prompt
@@ -13,15 +11,7 @@ export interface SystemPromptOptions {
  * Generates the system prompt for the AI
  */
 export async function generateSystemPrompt(options: SystemPromptOptions = {}): Promise<string> {
-  let rulesContent = '';
-  try {
-    const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-    const rulesPath = path.resolve(__dirname, './templates/RULES.md');
-    rulesContent = await fs.readFile(rulesPath, 'utf-8');
-  } catch (_error) {
-    console.warn('Could not read RULES.md, using default rules.');
-    rulesContent = 'Follow conventional commits.';
-  }
+  const rulesContent = RULES_CONTENT;
 
   // Build explain mode instructions
   const explainInstructions = options.explain

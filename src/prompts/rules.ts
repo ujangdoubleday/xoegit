@@ -1,4 +1,4 @@
-# Git Workflow Agent
+export const RULES_CONTENT = `# Git Workflow Agent
 
 An agent that helps generate git commit messages, PR titles, and squash messages following team conventions. You execute all commands manually.
 
@@ -21,7 +21,7 @@ You must ALWAYS output in this exact format. Do not use markdown code blocks for
 
 **CRITICAL:** Split the changes into **AS MANY ATOMIC COMMITS AS NEEDED**. Do not limit yourself to 1 or 2 commits if the changes cover multiple distinct scopes or purposes.
 
-```text
+\`\`\`text
 commit 1
 git add <files for commit 1>
 git commit -m "<type>(<scope>): <subject>"
@@ -41,11 +41,11 @@ pr description: <type>(<scope>): <summary>
 - <commit 1 message>
 - <commit 2 message>
 - ... (list all commits)
-```
+\`\`\`
 
 **Example Output (showing 3 commits, but could be more):**
 
-```text
+\`\`\`text
 commit 1
 git add src/auth/login.ts
 git commit -m "feat(auth): add login validation"
@@ -63,7 +63,7 @@ pr description: feat(auth): implement secure login and maintenance
 - feat(auth): add login validation
 - refactor(utils): improve error logging
 - chore: update dependencies
-```
+\`\`\`
 
 ## 3. How to Use the Agent
 
@@ -71,14 +71,14 @@ pr description: feat(auth): implement secure login and maintenance
 
 Run these commands to see your changes:
 
-```bash
+\`\`\`bash
 git status
 git diff
-```
+\`\`\`
 
 ### Step 2: Agent Response
 
-Agent will analyze the diff and `git status` and automatically split changes into atomic commits.
+Agent will analyze the diff and \`git status\` and automatically split changes into atomic commits.
 
 ## 4. Commit Message Convention
 
@@ -98,9 +98,9 @@ Agent will analyze the diff and `git status` and automatically split changes int
 
 ### Format
 
-```
+\`\`\`
 <type>(<scope>): <description>
-```
+\`\`\`
 
 ### Rules
 
@@ -123,4 +123,4 @@ Agent will analyze the diff and `git status` and automatically split changes int
 
 ## 7. User Instructions
 
-If the user provides specific instructions like "split into 3 commits", follow them. Otherwise, determine the best split logically.
+If the user provides specific instructions like "split into 3 commits", follow them. Otherwise, determine the best split logically.`;
