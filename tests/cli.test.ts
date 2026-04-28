@@ -41,4 +41,16 @@ describe('CLI Program', () => {
     expect(deleteKeyOption).toBeDefined();
     expect(deleteKeyOption?.short).toBe('-d');
   });
+
+  it('should have --report option', () => {
+    const options = program.options;
+    const reportOption = options.find((opt) => opt.long === '--report');
+    expect(reportOption).toBeDefined();
+  });
+
+  it('should have --lang option', () => {
+    const options = program.options;
+    const langOption = options.find((opt) => opt.long === '--lang');
+    expect(langOption).toBeDefined();
+  });
 });

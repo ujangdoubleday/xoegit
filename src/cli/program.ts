@@ -15,4 +15,13 @@ program
   .option('-s, --set-key <key>', 'Save Gemini API Key to config (overwrites existing)')
   .option('-d, --delete-key', 'Delete saved API Key from config')
   .option('-e, --execute', 'Execute commit after confirmation prompt')
-  .option('--explain', 'Show explanation for each commit grouping (verbose mode)');
+  .option('--explain', 'Show explanation for each commit grouping (verbose mode)')
+  .option(
+    '--report <period>',
+    'Generate weekly progress report from git log (e.g., NOW, 4W, 3D, 2M)'
+  )
+  .option(
+    '--lang <code>',
+    'Output language for the report (e.g., en, id, ja). Defaults to en',
+    'en'
+  );
