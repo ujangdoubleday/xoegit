@@ -1,4 +1,6 @@
 import readline from 'readline';
+import { ProviderName } from '../types/index.js';
+import { getProviderLabel } from '../providers/registry.js';
 
 /**
  * Validates if a string is a valid API key format
@@ -10,11 +12,19 @@ export function isValidApiKey(key: string): boolean {
 }
 
 /**
+ * Get provider-specific prompt message
+ */
+function getApiKeyPrompt(provider: ProviderName): string {
+  const label = getProviderLabel(provider);
+  return `Please enter your ${label} API Key: `;
+}
+
+/**
  * Prompts user for API key input via stdin with hidden input
  */
-export async function promptApiKey(): Promise<string> {
+export async function promptApiKey(provider: ProviderName = 'gemini'): Promise<string> {
   return new Promise((resolve) => {
-    process.stdout.write('Please enter your Google Gemini API Key: ');
+    process.stdout.write(getApiKeyPrompt(provider));
 
     if (process.stdin.setRawMode && process.stdout.isTTY) {
       process.stdin.setRawMode(true);
