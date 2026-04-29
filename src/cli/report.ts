@@ -11,10 +11,11 @@ import {
   showWarning,
   showInfo,
 } from '../utils/index.js';
-import { generateContent } from '../providers/index.js';
+import { createProvider, requiresApiKey, getProviderLabel } from '../providers/index.js';
 import { isGitRepository } from '../git/index.js';
 import { parsePeriod, getGitLogForReport, getPeriodLabel } from '../git/report.js';
 import { generateReportSystemPrompt, generateReportUserPrompt } from '../prompts/report.js';
+import { ProviderName } from '../types/index.js';
 
 /**
  * Report action - generates weekly progress report from git log
@@ -26,6 +27,7 @@ export async function reportAction(): Promise<void> {
     const options = program.opts();
     const periodInput = options.report as string;
     const language = (options.lang as string) || 'en';
+    const providerName = (options.provider as ProviderName) || 'gemini';
 
     // 1. Validate period format
     let period;
@@ -40,16 +42,26 @@ export async function reportAction(): Promise<void> {
     let apiKey = options.apiKey as string | undefined;
     const configService = new ConfigService();
 
-    if (!apiKey) {
-      apiKey = await configService.getApiKey();
+    if (!apiKey && requiresApiKey(providerName)) {
+      apiKey = await configService.getApiKey(providerName);
     }
 
-    if (!apiKey) {
-      showWarning('Gemini API Key not found.');
-      showInfo('Get one at https://aistudio.google.com/');
+    if (requiresApiKey(providerName) && !apiKey) {
+      showWarning(`${getProviderLabel(providerName)} API Key not found.`);
+
+      const helpUrls: Record<ProviderName, string> = {
+        gemini: 'https://aistudio.google.com/',
+        openai: 'https://platform.openai.com/api-keys',
+        anthropic: 'https://console.anthropic.com/settings/keys',
+        ollama: '',
+      };
+
+      if (helpUrls[providerName]) {
+        showInfo(`Get one at ${helpUrls[providerName]}`);
+      }
 
       try {
-        apiKey = await promptApiKey();
+        apiKey = await promptApiKey(providerName);
       } catch (_err) {
         showError('Input Error', 'Failed to read input.');
         process.exit(1);
@@ -60,8 +72,18 @@ export async function reportAction(): Promise<void> {
         process.exit(1);
       }
 
-      await configService.saveApiKey(apiKey);
+      await configService.saveApiKey(providerName, apiKey);
       showSuccess('API Key saved successfully!');
+    }
+
+    // Save provider preference if explicitly set via flag
+    if (options.provider) {
+      await configService.saveProvider(providerName);
+    }
+
+    // Save Ollama URL if explicitly set
+    if (options.ollamaUrl) {
+      await configService.saveOllamaBaseUrl(options.ollamaUrl);
     }
 
     // 3. Check if inside a git repository
@@ -105,7 +127,17 @@ export async function reportAction(): Promise<void> {
 
     // 6. Call AI provider
     try {
-      const report = await generateContent(apiKey, systemPrompt, userPrompt);
+      const model = options.model as string | undefined;
+      const ollamaBaseUrl = options.ollamaUrl || (await configService.getOllamaBaseUrl());
+      const ollamaModel = model || (await configService.getOllamaModel());
+
+      const provider = createProvider(providerName, {
+        apiKey,
+        model: providerName === 'ollama' ? ollamaModel : model,
+        baseUrl: ollamaBaseUrl,
+      });
+
+      const report = await provider.generateContent(systemPrompt, userPrompt);
       spinner.stop();
 
       showSuccess('Report generated!');

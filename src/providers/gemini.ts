@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { AIProvider } from '../types/index.js';
 import { GeminiModelName, getModelList } from './models.js';
 
 /**
@@ -30,38 +31,44 @@ async function tryGenerateWithModel(
   return response.text ?? '';
 }
 
-/**
- * Generate content using Gemini with automatic model fallback on rate limit
- */
-export async function generateContent(
-  apiKey: string,
-  systemPrompt: string,
-  userMessage: string
-): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey });
+export class GeminiProvider implements AIProvider {
+  private apiKey: string;
 
-  // Get ordered list of models to try
-  const modelsToTry = getModelList();
-  const errors: string[] = [];
-
-  // Try each model in order, fallback on rate limit
-  for (const modelName of modelsToTry) {
-    try {
-      const result = await tryGenerateWithModel(ai, modelName, systemPrompt, userMessage);
-      return result;
-    } catch (error: unknown) {
-      if (isRateLimitError(error)) {
-        errors.push(`${modelName}: rate limited`);
-        // Continue to next model
-        continue;
-      }
-      // Non-rate-limit error, throw immediately
-      throw new Error(`Gemini Provider Error: ${(error as Error).message}`);
-    }
+  constructor(apiKey: string) {
+    this.apiKey = apiKey;
   }
 
-  // All models exhausted
-  throw new Error(`All models rate limited. Tried: ${errors.join(', ')}. Please try again later.`);
+  /**
+   * Generate content using Gemini with automatic model fallback on rate limit
+   */
+  async generateContent(systemPrompt: string, userMessage: string): Promise<string> {
+    const ai = new GoogleGenAI({ apiKey: this.apiKey });
+
+    // Get ordered list of models to try
+    const modelsToTry = getModelList('gemini') as GeminiModelName[];
+    const errors: string[] = [];
+
+    // Try each model in order, fallback on rate limit
+    for (const modelName of modelsToTry) {
+      try {
+        const result = await tryGenerateWithModel(ai, modelName, systemPrompt, userMessage);
+        return result;
+      } catch (error: unknown) {
+        if (isRateLimitError(error)) {
+          errors.push(`${modelName}: rate limited`);
+          // Continue to next model
+          continue;
+        }
+        // Non-rate-limit error, throw immediately
+        throw new Error(`Gemini Provider Error: ${(error as Error).message}`);
+      }
+    }
+
+    // All models exhausted
+    throw new Error(
+      `All models rate limited. Tried: ${errors.join(', ')}. Please try again later.`
+    );
+  }
 }
 
 /**
@@ -118,5 +125,6 @@ ${diff}
 Please suggest the git add command and the git commit message.
 `;
 
-  return generateContent(apiKey, systemPrompt, userMessage);
+  const provider = new GeminiProvider(apiKey);
+  return provider.generateContent(systemPrompt, userMessage);
 }

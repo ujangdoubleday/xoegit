@@ -1,6 +1,8 @@
-/**
- * Available Gemini models for free tier
- */
+import { ProviderName } from '../types/index.js';
+
+/* ------------------------------------------------------------------ */
+/*  Gemini                                                            */
+/* ------------------------------------------------------------------ */
 export const GEMINI_MODELS = {
   'flash-lite': 'gemini-2.5-flash-lite',
   flash: 'gemini-2.5-flash',
@@ -10,35 +12,99 @@ export const GEMINI_MODELS = {
 export type GeminiModelKey = keyof typeof GEMINI_MODELS;
 export type GeminiModelName = (typeof GEMINI_MODELS)[GeminiModelKey];
 
-/**
- * Default model to use
- */
-export const DEFAULT_MODEL: GeminiModelKey = 'flash-lite';
+/* ------------------------------------------------------------------ */
+/*  OpenAI                                                            */
+/* ------------------------------------------------------------------ */
+export const OPENAI_MODELS = {
+  'gpt-4.1-mini': 'gpt-4.1-mini',
+  'gpt-4.1': 'gpt-4.1',
+  'gpt-4.1-nano': 'gpt-4.1-nano',
+} as const;
+
+export type OpenAIModelKey = keyof typeof OPENAI_MODELS;
+export type OpenAIModelName = (typeof OPENAI_MODELS)[OpenAIModelKey];
+
+/* ------------------------------------------------------------------ */
+/*  Anthropic                                                         */
+/* ------------------------------------------------------------------ */
+export const ANTHROPIC_MODELS = {
+  'claude-sonnet-4': 'claude-sonnet-4-20250514',
+  'claude-opus-4': 'claude-opus-4-20260701',
+  'claude-haiku-4': 'claude-haiku-4-20250514',
+} as const;
+
+export type AnthropicModelKey = keyof typeof ANTHROPIC_MODELS;
+export type AnthropicModelName = (typeof ANTHROPIC_MODELS)[AnthropicModelKey];
+
+/* ------------------------------------------------------------------ */
+/*  Ollama                                                            */
+/* ------------------------------------------------------------------ */
+export const OLLAMA_MODELS = {
+  'llama3.2': 'llama3.2',
+  'llama3.1': 'llama3.1',
+  'qwen2.5': 'qwen2.5',
+} as const;
+
+export type OllamaModelKey = keyof typeof OLLAMA_MODELS;
+export type OllamaModelName = (typeof OLLAMA_MODELS)[OllamaModelKey];
+
+/* ------------------------------------------------------------------ */
+/*  Defaults                                                          */
+/* ------------------------------------------------------------------ */
+const DEFAULT_MODELS: Record<ProviderName, string> = {
+  gemini: GEMINI_MODELS['flash-lite'],
+  openai: OPENAI_MODELS['gpt-4.1-mini'],
+  anthropic: ANTHROPIC_MODELS['claude-sonnet-4'],
+  ollama: OLLAMA_MODELS['llama3.2'],
+};
+
+export function getDefaultModel(provider: ProviderName): string {
+  return DEFAULT_MODELS[provider];
+}
+
+/* ------------------------------------------------------------------ */
+/*  Model lists                                                       */
+/* ------------------------------------------------------------------ */
+const MODEL_LISTS: Record<ProviderName, string[]> = {
+  gemini: Object.values(GEMINI_MODELS),
+  openai: Object.values(OPENAI_MODELS),
+  anthropic: Object.values(ANTHROPIC_MODELS),
+  ollama: Object.values(OLLAMA_MODELS),
+};
 
 /**
- * Get model name from key, returns default if invalid
+ * Get ordered list of model names for fallback (default first).
+ * Currently only Gemini supports fallback; others return single-item list.
  */
-export function getModelName(key?: string): GeminiModelName {
-  if (key && key in GEMINI_MODELS) {
-    return GEMINI_MODELS[key as GeminiModelKey];
-  }
-  return GEMINI_MODELS[DEFAULT_MODEL];
+export function getModelList(provider: ProviderName): string[] {
+  const defaultModel = getDefaultModel(provider);
+  const allModels = MODEL_LISTS[provider];
+
+  // Put default model first, then the rest
+  return [defaultModel, ...allModels.filter((m) => m !== defaultModel)];
 }
 
 /**
  * Get list of available model keys for CLI help
  */
-export function getAvailableModels(): string[] {
-  return Object.keys(GEMINI_MODELS);
+export function getAvailableModels(provider: ProviderName): string[] {
+  switch (provider) {
+    case 'gemini':
+      return Object.keys(GEMINI_MODELS);
+    case 'openai':
+      return Object.keys(OPENAI_MODELS);
+    case 'anthropic':
+      return Object.keys(ANTHROPIC_MODELS);
+    case 'ollama':
+      return Object.keys(OLLAMA_MODELS);
+    default:
+      return [];
+  }
 }
 
 /**
- * Get ordered list of model names for fallback (default first)
+ * Validate if a model name is valid for a provider
  */
-export function getModelList(): GeminiModelName[] {
-  const defaultModelName = GEMINI_MODELS[DEFAULT_MODEL];
-  const allModels = Object.values(GEMINI_MODELS);
-
-  // Put default model first, then the rest
-  return [defaultModelName, ...allModels.filter((m) => m !== defaultModelName)];
+export function isValidModel(provider: ProviderName, model: string): boolean {
+  return MODEL_LISTS[provider].includes(model);
 }

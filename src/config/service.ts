@@ -1,9 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { XoegitConfig } from '../types/index.js';
+import { XoegitConfig, ProviderName } from '../types/index.js';
 import { getConfigPath } from './constants.js';
 import { isValidApiKey } from '../utils/index.js';
 import { encrypt, decrypt, isEncrypted } from './encryption.js';
+import { getApiKeyEnvVar, requiresApiKey } from '../providers/registry.js';
 
 export class ConfigService {
   private configPath: string;
@@ -12,82 +13,184 @@ export class ConfigService {
     this.configPath = getConfigPath();
   }
 
-  async getApiKey(): Promise<string | undefined> {
+  /**
+   * Load config from disk
+   */
+  private async loadConfig(): Promise<XoegitConfig> {
+    try {
+      const configStr = await fs.readFile(this.configPath, 'utf-8');
+      return JSON.parse(configStr) as XoegitConfig;
+    } catch (_error) {
+      return {};
+    }
+  }
+
+  /**
+   * Save config to disk
+   */
+  private async saveConfig(config: XoegitConfig): Promise<void> {
+    const dir = path.dirname(this.configPath);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
+  }
+
+  /**
+   * Get configured provider (env > config > default)
+   */
+  async getProvider(): Promise<ProviderName> {
+    const envProvider = process.env.XOEGIT_PROVIDER as ProviderName | undefined;
+    if (envProvider && ['gemini', 'openai', 'anthropic', 'ollama'].includes(envProvider)) {
+      return envProvider;
+    }
+
+    const config = await this.loadConfig();
+    if (config.provider && ['gemini', 'openai', 'anthropic', 'ollama'].includes(config.provider)) {
+      return config.provider;
+    }
+
+    return 'gemini';
+  }
+
+  /**
+   * Save preferred provider
+   */
+  async saveProvider(provider: ProviderName): Promise<void> {
+    const config = await this.loadConfig();
+    config.provider = provider;
+    await this.saveConfig(config);
+  }
+
+  /**
+   * Get API key for a specific provider (env > config > undefined)
+   */
+  async getApiKey(provider: ProviderName): Promise<string | undefined> {
+    if (!requiresApiKey(provider)) {
+      return undefined;
+    }
+
+    const envVar = getApiKeyEnvVar(provider);
+
     // 1. Check environment variable
-    if (process.env.XOEGIT_GEMINI_API_KEY) {
-      return process.env.XOEGIT_GEMINI_API_KEY;
+    if (envVar && process.env[envVar]) {
+      return process.env[envVar];
     }
 
     // 2. Check config file
-    try {
-      const configStr = await fs.readFile(this.configPath, 'utf-8');
-      const config = JSON.parse(configStr) as XoegitConfig;
+    const config = await this.loadConfig();
+    const configKey = envVar as keyof XoegitConfig;
+    const rawKey = config[configKey] as string | undefined;
 
-      if (config.XOEGIT_GEMINI_API_KEY) {
-        let apiKey = config.XOEGIT_GEMINI_API_KEY;
+    if (rawKey) {
+      let apiKey = rawKey;
 
-        // check if encrypted and decrypt
-        if (isEncrypted(apiKey)) {
-          try {
-            apiKey = decrypt(apiKey);
-          } catch (_decryptError) {
-            // decryption failed, treat as invalid
-            return undefined;
-          }
-        } else {
-          // plain text key found, migrate to encrypted format
-          await this.saveApiKey(apiKey);
+      // check if encrypted and decrypt
+      if (isEncrypted(apiKey)) {
+        try {
+          apiKey = decrypt(apiKey);
+        } catch (_decryptError) {
+          // decryption failed, treat as invalid
+          return undefined;
         }
-
-        if (isValidApiKey(apiKey)) {
-          return apiKey;
-        }
+      } else {
+        // plain text key found, migrate to encrypted format
+        await this.saveApiKey(provider, apiKey);
       }
-    } catch (_error) {
-      // Config file doesn't exist or is invalid, ignore
+
+      if (isValidApiKey(apiKey)) {
+        return apiKey;
+      }
     }
 
     return undefined;
   }
 
-  async saveApiKey(apiKey: string): Promise<void> {
-    try {
-      const dir = path.dirname(this.configPath);
-      await fs.mkdir(dir, { recursive: true });
+  /**
+   * Save API key for a specific provider
+   */
+  async saveApiKey(provider: ProviderName, apiKey: string): Promise<void> {
+    if (!requiresApiKey(provider)) {
+      return;
+    }
 
-      let config: XoegitConfig = {};
+    const envVar = getApiKeyEnvVar(provider);
+    if (!envVar) {
+      return;
+    }
+
+    const config = await this.loadConfig();
+    (config as Record<string, string>)[envVar] = encrypt(apiKey);
+    await this.saveConfig(config);
+  }
+
+  /**
+   * Delete API key for a specific provider
+   */
+  async deleteApiKey(provider: ProviderName): Promise<void> {
+    const config = await this.loadConfig();
+    const envVar = getApiKeyEnvVar(provider);
+
+    if (envVar) {
+      delete (config as Record<string, unknown>)[envVar];
+    }
+
+    if (Object.keys(config).length === 0) {
       try {
-        const existing = await fs.readFile(this.configPath, 'utf-8');
-        config = JSON.parse(existing);
-      } catch (_e) {
-        // ignore
+        await fs.unlink(this.configPath);
+      } catch (error: unknown) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw new Error(`Failed to delete API key: ${(error as Error).message}`);
+        }
       }
-
-      // encrypt the API key before saving
-      config.XOEGIT_GEMINI_API_KEY = encrypt(apiKey);
-      await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
-    } catch (error: unknown) {
-      throw new Error(`Failed to save configuration: ${(error as Error).message}`);
+    } else {
+      await this.saveConfig(config);
     }
   }
 
-  async deleteApiKey(): Promise<void> {
-    try {
-      const configStr = await fs.readFile(this.configPath, 'utf-8');
-      const config = JSON.parse(configStr) as XoegitConfig;
-      delete config.XOEGIT_GEMINI_API_KEY;
-
-      if (Object.keys(config).length === 0) {
-        // Delete the file if no other config remains
-        await fs.unlink(this.configPath);
-      } else {
-        await fs.writeFile(this.configPath, JSON.stringify(config, null, 2), { mode: 0o600 });
-      }
-    } catch (error: unknown) {
-      // Ignore if file doesn't exist
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        throw new Error(`Failed to delete API key: ${(error as Error).message}`);
-      }
+  /**
+   * Get Ollama base URL (env > config > default)
+   */
+  async getOllamaBaseUrl(): Promise<string> {
+    const envUrl = process.env.XOEGIT_OLLAMA_BASE_URL;
+    if (envUrl) {
+      return envUrl;
     }
+
+    const config = await this.loadConfig();
+    if (config.XOEGIT_OLLAMA_BASE_URL) {
+      return config.XOEGIT_OLLAMA_BASE_URL;
+    }
+
+    return 'http://localhost:11434';
+  }
+
+  /**
+   * Save Ollama base URL
+   */
+  async saveOllamaBaseUrl(baseUrl: string): Promise<void> {
+    const config = await this.loadConfig();
+    config.XOEGIT_OLLAMA_BASE_URL = baseUrl;
+    await this.saveConfig(config);
+  }
+
+  /**
+   * Get Ollama model (env > config > default)
+   */
+  async getOllamaModel(): Promise<string | undefined> {
+    const envModel = process.env.XOEGIT_OLLAMA_MODEL;
+    if (envModel) {
+      return envModel;
+    }
+
+    const config = await this.loadConfig();
+    return config.XOEGIT_OLLAMA_MODEL;
+  }
+
+  /**
+   * Save Ollama model
+   */
+  async saveOllamaModel(model: string): Promise<void> {
+    const config = await this.loadConfig();
+    config.XOEGIT_OLLAMA_MODEL = model;
+    await this.saveConfig(config);
   }
 }

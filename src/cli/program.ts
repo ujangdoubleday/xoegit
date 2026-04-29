@@ -7,13 +7,22 @@ program
   .name('xoegit')
   .description('AI-powered git commit generator')
   .version(VERSION)
-  .option('-k, --api-key <key>', 'Gemini API Key')
+  .option('-k, --api-key <key>', 'API Key for the selected provider')
+  .option(
+    '-p, --provider <name>',
+    'AI provider to use (gemini, openai, anthropic, ollama)',
+    'gemini'
+  )
+  .option('-m, --model <model>', 'Model to use for the selected provider')
   .option(
     '-c, --context <context>',
     'Context for the changes (e.g., "refactoring folder structure")'
   )
-  .option('-s, --set-key <key>', 'Save Gemini API Key to config (overwrites existing)')
-  .option('-d, --delete-key', 'Delete saved API Key from config')
+  .option(
+    '-s, --set-key <key>',
+    'Save API Key to config for the current provider (overwrites existing)'
+  )
+  .option('-d, --delete-key', 'Delete saved API Key from config for the current provider')
   .option('-e, --execute', 'Execute commit after confirmation prompt')
   .option('--explain', 'Show explanation for each commit grouping (verbose mode)')
   .option(
@@ -24,4 +33,5 @@ program
     '--lang <code>',
     'Output language for the report (e.g., en, id, ja). Defaults to en',
     'en'
-  );
+  )
+  .option('--ollama-url <url>', 'Base URL for Ollama API (default: http://localhost:11434)');

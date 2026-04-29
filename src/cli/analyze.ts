@@ -24,7 +24,8 @@ import {
   executeGitCommit,
 } from '../git/index.js';
 import { generateSystemPrompt } from '../prompts/index.js';
-import { generateCommitSuggestion } from '../providers/index.js';
+import { createProvider, requiresApiKey, getProviderLabel } from '../providers/index.js';
+import { ProviderName } from '../types/index.js';
 
 /**
  * Main analyze action - orchestrates the commit suggestion flow
@@ -36,7 +37,8 @@ export async function analyzeAction(): Promise<void> {
   try {
     // 0. Check API Key Config
     const options = program.opts();
-    let apiKey = options.apiKey;
+    const providerName = (options.provider as ProviderName) || 'gemini';
+    let apiKey = options.apiKey as string | undefined;
 
     const configService = new ConfigService();
 
@@ -46,28 +48,39 @@ export async function analyzeAction(): Promise<void> {
         showError('Invalid API Key', 'Please provide a valid API key.');
         process.exit(1);
       }
-      await configService.saveApiKey(options.setKey);
-      showSuccess('API Key saved successfully!');
+      await configService.saveApiKey(providerName, options.setKey);
+      showSuccess(`${getProviderLabel(providerName)} API Key saved successfully!`);
       return;
     }
 
     // Handle --delete-key flag (delete and exit)
     if (options.deleteKey) {
-      await configService.deleteApiKey();
-      showSuccess('API Key deleted successfully!');
+      await configService.deleteApiKey(providerName);
+      showSuccess(`${getProviderLabel(providerName)} API Key deleted successfully!`);
       return;
     }
 
-    if (!apiKey) {
-      apiKey = await configService.getApiKey();
+    // Resolve API key
+    if (!apiKey && requiresApiKey(providerName)) {
+      apiKey = await configService.getApiKey(providerName);
     }
 
-    if (!apiKey) {
-      showWarning('Gemini API Key not found.');
-      showInfo('Get one at https://aistudio.google.com/');
+    if (requiresApiKey(providerName) && !apiKey) {
+      showWarning(`${getProviderLabel(providerName)} API Key not found.`);
+
+      const helpUrls: Record<ProviderName, string> = {
+        gemini: 'https://aistudio.google.com/',
+        openai: 'https://platform.openai.com/api-keys',
+        anthropic: 'https://console.anthropic.com/settings/keys',
+        ollama: '',
+      };
+
+      if (helpUrls[providerName]) {
+        showInfo(`Get one at ${helpUrls[providerName]}`);
+      }
 
       try {
-        apiKey = await promptApiKey();
+        apiKey = await promptApiKey(providerName);
       } catch (_err) {
         showError('Input Error', 'Failed to read input.');
         process.exit(1);
@@ -78,8 +91,25 @@ export async function analyzeAction(): Promise<void> {
         process.exit(1);
       }
 
-      await configService.saveApiKey(apiKey);
+      await configService.saveApiKey(providerName, apiKey);
       showSuccess('API Key saved successfully!');
+    }
+
+    // Save provider preference if explicitly set via flag
+    if (options.provider) {
+      await configService.saveProvider(providerName);
+    }
+
+    // Save Ollama URL if explicitly set
+    if (options.ollamaUrl) {
+      await configService.saveOllamaBaseUrl(options.ollamaUrl);
+    }
+
+    // Save model override if explicitly set
+    if (options.model) {
+      if (providerName === 'ollama') {
+        await configService.saveOllamaModel(options.model);
+      }
     }
 
     // 1. Check if git repo
@@ -125,16 +155,60 @@ export async function analyzeAction(): Promise<void> {
       spinner.text = spinnerText.generating;
     }
 
-    // 4. Call AI (automatic model fallback on rate limit)
+    // 4. Call AI provider
     try {
-      const suggestion = await generateCommitSuggestion(
+      const model = options.model as string | undefined;
+      const ollamaBaseUrl = options.ollamaUrl || (await configService.getOllamaBaseUrl());
+      const ollamaModel = model || (await configService.getOllamaModel());
+
+      const provider = createProvider(providerName, {
         apiKey,
-        systemPrompt,
-        diff,
-        status,
-        log,
-        userContext
-      );
+        model: providerName === 'ollama' ? ollamaModel : model,
+        baseUrl: ollamaBaseUrl,
+      });
+
+      // Build the user message (same as before)
+      let untrackedMsg = '';
+      try {
+        const statusObj = JSON.parse(status);
+        if (statusObj.not_added && statusObj.not_added.length > 0) {
+          untrackedMsg = `
+Untracked Files (New Files):
+${statusObj.not_added.join('\n')}
+
+IMPORTANT: The above files are NEW and untracked. You MUST suggest 'git add' for them and include them in commits based on their names/purpose.
+`;
+        }
+      } catch (_e) {
+        // metadata parsing failed, just ignore
+      }
+
+      const contextSection = userContext
+        ? `
+USER CONTEXT (IMPORTANT - This describes the overall purpose of these changes):
+"${userContext}"
+
+Use this context to determine the appropriate commit type (feat, fix, refactor, chore, etc.) and to write more accurate commit messages.
+`
+        : '';
+
+      const userMessage = `
+${contextSection}
+Git Status:
+${status}
+
+${untrackedMsg}
+
+Git Log (Last 5 commits):
+${log}
+
+Git Diff:
+${diff}
+
+Please suggest the git add command and the git commit message.
+`;
+
+      const suggestion = await provider.generateContent(systemPrompt, userMessage);
       spinner.stop();
 
       showSuccess('Suggestion generated!');
