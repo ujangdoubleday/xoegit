@@ -60,7 +60,7 @@ export class GeminiProvider implements AIProvider {
           continue;
         }
         // Non-rate-limit error, throw immediately
-        throw new Error(`Gemini Provider Error: ${(error as Error).message}`);
+        throw new Error(`Gemini Provider Error: ${(error as Error).message}`, { cause: error });
       }
     }
 

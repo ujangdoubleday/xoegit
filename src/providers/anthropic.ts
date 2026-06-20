@@ -41,7 +41,9 @@ export class AnthropicProvider implements AIProvider {
       });
     } catch (fetchError: unknown) {
       const errorMessage = (fetchError as Error)?.message || String(fetchError);
-      throw new Error(`Unable to connect to Anthropic API. (${errorMessage})`);
+      throw new Error(`Unable to connect to Anthropic API. (${errorMessage})`, {
+        cause: fetchError,
+      });
     }
 
     if (!response.ok) {
