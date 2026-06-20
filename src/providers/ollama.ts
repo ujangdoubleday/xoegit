@@ -44,7 +44,8 @@ export class OllamaProvider implements AIProvider {
       const errorMessage = (fetchError as Error)?.message || String(fetchError);
       throw new Error(
         `Unable to connect to Ollama at ${url}. ` +
-          `Make sure Ollama is running and reachable. (${errorMessage})`
+          `Make sure Ollama is running and reachable. (${errorMessage})`,
+        { cause: fetchError }
       );
     }
 
