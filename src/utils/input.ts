@@ -1,4 +1,5 @@
 import readline from 'readline';
+import chalk from 'chalk';
 import { ProviderName } from '../types/index.js';
 import { getProviderLabel } from '../providers/registry.js';
 
@@ -81,6 +82,83 @@ export async function promptApiKey(provider: ProviderName = 'gemini'): Promise<s
         resolve(answer.trim());
       });
     }
+  });
+}
+
+/**
+ * A single selectable option for {@link promptSelect}.
+ */
+export interface SelectChoice<T extends string> {
+  label: string;
+  value: T;
+  hint?: string;
+}
+
+/**
+ * Prompts the user to pick one option from a numbered list.
+ * Pressing Enter with no input selects the first option (the default).
+ */
+export async function promptSelect<T extends string>(
+  message: string,
+  choices: SelectChoice<T>[]
+): Promise<T> {
+  return new Promise((resolve) => {
+    console.log(message);
+    choices.forEach((choice, index) => {
+      const number = chalk.cyan(`${index + 1})`);
+      const hint = choice.hint ? chalk.gray(`  ${choice.hint}`) : '';
+      console.log(`  ${number} ${choice.label}${hint}`);
+    });
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    const ask = (): void => {
+      rl.question(chalk.gray(`Select [1-${choices.length}] (default 1): `), (answer) => {
+        const trimmed = answer.trim();
+
+        if (trimmed === '') {
+          rl.close();
+          resolve(choices[0].value);
+          return;
+        }
+
+        const choice = Number.parseInt(trimmed, 10);
+        if (!Number.isNaN(choice) && choice >= 1 && choice <= choices.length) {
+          rl.close();
+          resolve(choices[choice - 1].value);
+          return;
+        }
+
+        console.log(chalk.yellow('Invalid selection. Please try again.'));
+        ask();
+      });
+    };
+
+    ask();
+  });
+}
+
+/**
+ * Prompts the user for a free-text value. Returns `defaultValue` when the
+ * input is left empty (used for optional custom endpoints).
+ */
+export async function promptText(message: string, defaultValue?: string): Promise<string> {
+  return new Promise((resolve) => {
+    const suffix = defaultValue ? chalk.gray(` (default: ${defaultValue})`) : '';
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    rl.question(`${message}${suffix}: `, (answer) => {
+      rl.close();
+      const trimmed = answer.trim();
+      resolve(trimmed === '' ? (defaultValue ?? '') : trimmed);
+    });
   });
 }
 
