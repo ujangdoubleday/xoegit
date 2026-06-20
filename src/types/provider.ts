@@ -1,7 +1,7 @@
 /**
  * Supported AI provider names
  */
-export type ProviderName = 'gemini' | 'openai' | 'anthropic' | 'ollama';
+export type ProviderName = 'gemini' | 'openai' | 'anthropic' | 'ollama' | 'openrouter';
 
 /**
  * Configuration passed when creating a provider instance

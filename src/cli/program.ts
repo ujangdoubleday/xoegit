@@ -10,7 +10,7 @@ program
   .option('-k, --api-key <key>', 'API Key for the selected provider')
   .option(
     '-p, --provider <name>',
-    'AI provider to use (gemini, openai, anthropic, ollama)',
+    'AI provider to use (gemini, openai, anthropic, ollama, openrouter)',
     'gemini'
   )
   .option('-m, --model <model>', 'Model to use for the selected provider')
@@ -34,4 +34,8 @@ program
     'Output language for the report (e.g., en, id, ja). Defaults to en',
     'en'
   )
-  .option('--ollama-url <url>', 'Base URL for Ollama API (default: http://localhost:11434)');
+  .option('--ollama-url <url>', 'Base URL for Ollama API (default: http://localhost:11434)')
+  .option(
+    '--openrouter-url <url>',
+    'Endpoint for OpenRouter API (default: https://openrouter.ai/api/v1/chat/completions)'
+  );

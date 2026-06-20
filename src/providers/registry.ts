@@ -3,6 +3,7 @@ import { GeminiProvider } from './gemini.js';
 import { OpenAIProvider } from './openai.js';
 import { AnthropicProvider } from './anthropic.js';
 import { OllamaProvider } from './ollama.js';
+import { OpenRouterProvider } from './openrouter.js';
 
 /**
  * Create an AI provider instance based on name and config
@@ -31,6 +32,12 @@ export function createProvider(name: ProviderName, config: ProviderConfig): AIPr
       const baseUrl = config.baseUrl || 'http://localhost:11434';
       return new OllamaProvider(baseUrl, config.model);
     }
+    case 'openrouter': {
+      if (!config.apiKey) {
+        throw new Error('OpenRouter provider requires an API key');
+      }
+      return new OpenRouterProvider(config.apiKey, config.model, config.baseUrl);
+    }
     default: {
       throw new Error(`Unknown provider: ${name}`);
     }
@@ -46,6 +53,7 @@ export function getProviderLabel(name: ProviderName): string {
     openai: 'OpenAI',
     anthropic: 'Anthropic Claude',
     ollama: 'Ollama (Local)',
+    openrouter: 'OpenRouter',
   };
   return labels[name];
 }
@@ -66,6 +74,7 @@ export function getApiKeyEnvVar(name: ProviderName): string | undefined {
     openai: 'XOEGIT_OPENAI_API_KEY',
     anthropic: 'XOEGIT_ANTHROPIC_API_KEY',
     ollama: undefined,
+    openrouter: 'XOEGIT_OPENROUTER_API_KEY',
   };
   return envVars[name];
 }
