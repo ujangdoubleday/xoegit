@@ -4,7 +4,6 @@ import { program } from './program.js';
 import { ConfigService } from '../config/index.js';
 import {
   isValidApiKey,
-  promptApiKey,
   promptConfirm,
   showBanner,
   showSuggestion,
@@ -26,6 +25,7 @@ import {
 import { generateSystemPrompt } from '../prompts/index.js';
 import { createProvider, requiresApiKey, getProviderLabel } from '../providers/index.js';
 import { resolveProviderRuntime } from './providerRuntime.js';
+import { runSetupWizard } from './setup.js';
 import { ProviderName } from '../types/index.js';
 
 /**
@@ -38,7 +38,7 @@ export async function analyzeAction(): Promise<void> {
   try {
     // 0. Check API Key Config
     const options = program.opts();
-    const providerName = (options.provider as ProviderName) || 'gemini';
+    let providerName = (options.provider as ProviderName) || 'gemini';
     let apiKey = options.apiKey as string | undefined;
 
     const configService = new ConfigService();
@@ -66,35 +66,14 @@ export async function analyzeAction(): Promise<void> {
       apiKey = await configService.getApiKey(providerName);
     }
 
+    // No API key yet -> run the interactive setup wizard
     if (requiresApiKey(providerName) && !apiKey) {
-      showWarning(`${getProviderLabel(providerName)} API Key not found.`);
-
-      const helpUrls: Record<ProviderName, string> = {
-        gemini: 'https://aistudio.google.com/',
-        openai: 'https://platform.openai.com/api-keys',
-        anthropic: 'https://console.anthropic.com/settings/keys',
-        ollama: '',
-        openrouter: 'https://openrouter.ai/keys',
-      };
-
-      if (helpUrls[providerName]) {
-        showInfo(`Get one at ${helpUrls[providerName]}`);
-      }
-
-      try {
-        apiKey = await promptApiKey(providerName);
-      } catch (_err) {
-        showError('Input Error', 'Failed to read input.');
-        process.exit(1);
-      }
-
-      if (!apiKey || !isValidApiKey(apiKey)) {
-        showError('Configuration Error', 'API Key is required to use xoegit.');
-        process.exit(1);
-      }
-
-      await configService.saveApiKey(providerName, apiKey);
-      showSuccess('API Key saved successfully!');
+      const providerWasExplicit = program.getOptionValueSource('provider') !== 'default';
+      const setup = await runSetupWizard(configService, {
+        preselectedProvider: providerWasExplicit ? providerName : undefined,
+      });
+      providerName = setup.provider;
+      apiKey = setup.apiKey;
     }
 
     // Save provider preference if explicitly set via flag
