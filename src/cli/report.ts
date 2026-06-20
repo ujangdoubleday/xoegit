@@ -21,7 +21,6 @@ export async function reportAction(): Promise<void> {
     const options = program.opts();
     const periodInput = options.report as string;
     const language = (options.lang as string) || 'en';
-    let providerName = (options.provider as ProviderName) || 'gemini';
 
     // 1. Validate period format
     let period;
@@ -36,13 +35,20 @@ export async function reportAction(): Promise<void> {
     let apiKey = options.apiKey as string | undefined;
     const configService = new ConfigService();
 
+    // Resolve provider: an explicit --provider flag (or XOEGIT_PROVIDER env)
+    // wins; otherwise fall back to the saved preference (env > config > default)
+    // so a previously configured provider+key is reused without re-running setup.
+    const providerWasExplicit = program.getOptionValueSource('provider') !== 'default';
+    let providerName = providerWasExplicit
+      ? (options.provider as ProviderName)
+      : await configService.getProvider();
+
     if (!apiKey && requiresApiKey(providerName)) {
       apiKey = await configService.getApiKey(providerName);
     }
 
     // No API key yet -> run the interactive setup wizard
     if (requiresApiKey(providerName) && !apiKey) {
-      const providerWasExplicit = program.getOptionValueSource('provider') !== 'default';
       const setup = await runSetupWizard(configService, {
         preselectedProvider: providerWasExplicit ? providerName : undefined,
       });
@@ -51,18 +57,8 @@ export async function reportAction(): Promise<void> {
     }
 
     // Save provider preference if explicitly set via flag
-    if (options.provider) {
+    if (providerWasExplicit) {
       await configService.saveProvider(providerName);
-    }
-
-    // Save Ollama URL if explicitly set
-    if (options.ollamaUrl) {
-      await configService.saveOllamaBaseUrl(options.ollamaUrl);
-    }
-
-    // Save OpenRouter URL if explicitly set
-    if (options.openrouterUrl) {
-      await configService.saveOpenRouterBaseUrl(options.openrouterUrl);
     }
 
     // 3. Check if inside a git repository
