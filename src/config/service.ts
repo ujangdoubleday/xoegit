@@ -138,7 +138,9 @@ export class ConfigService {
         await fs.unlink(this.configPath);
       } catch (error: unknown) {
         if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-          throw new Error(`Failed to delete API key: ${(error as Error).message}`);
+          throw new Error(`Failed to delete API key: ${(error as Error).message}`, {
+            cause: error,
+          });
         }
       }
     } else {
