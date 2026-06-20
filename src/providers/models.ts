@@ -53,7 +53,7 @@ export type OllamaModelName = (typeof OLLAMA_MODELS)[OllamaModelKey];
 /* ------------------------------------------------------------------ */
 /**
  * Default REST endpoint for OpenRouter (OpenAI-compatible).
- * Override via --openrouter-url or XOEGIT_OPENROUTER_BASE_URL.
+ * Override via the setup wizard or XOEGIT_OPENROUTER_BASE_URL.
  */
 export const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -62,6 +62,8 @@ export const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1/chat/co
  * Any raw slug (e.g. "openai/gpt-4o") is also accepted via --model.
  */
 export const OPENROUTER_MODELS = {
+  // `openrouter/auto` lets OpenRouter pick a suitable model automatically.
+  auto: 'openrouter/auto',
   'gpt-4o-mini': 'openai/gpt-4o-mini',
   'claude-3.5-haiku': 'anthropic/claude-3.5-haiku',
   'llama-3.3-70b': 'meta-llama/llama-3.3-70b-instruct',
@@ -79,7 +81,7 @@ const DEFAULT_MODELS: Record<ProviderName, string> = {
   openai: OPENAI_MODELS['gpt-4.1-mini'],
   anthropic: ANTHROPIC_MODELS['claude-sonnet-4'],
   ollama: OLLAMA_MODELS['llama3.2'],
-  openrouter: OPENROUTER_MODELS['gpt-4o-mini'],
+  openrouter: OPENROUTER_MODELS['auto'],
 };
 
 export function getDefaultModel(provider: ProviderName): string {
@@ -98,15 +100,16 @@ const MODEL_LISTS: Record<ProviderName, string[]> = {
 };
 
 /**
- * Get ordered list of model names for fallback (default first).
- * Currently only Gemini supports fallback; others return single-item list.
+ * Get ordered list of model names for fallback. The preferred model (an
+ * explicit override, else the provider default) is tried first, then the rest.
+ * Currently only Gemini uses the fallback; others read just the first entry.
  */
-export function getModelList(provider: ProviderName): string[] {
-  const defaultModel = getDefaultModel(provider);
+export function getModelList(provider: ProviderName, preferred?: string): string[] {
   const allModels = MODEL_LISTS[provider];
+  const first = preferred || getDefaultModel(provider);
 
-  // Put default model first, then the rest
-  return [defaultModel, ...allModels.filter((m) => m !== defaultModel)];
+  // Put the preferred model first, then the rest (deduped)
+  return [first, ...allModels.filter((m) => m !== first)];
 }
 
 /**

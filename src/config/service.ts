@@ -183,24 +183,35 @@ export class ConfigService {
   }
 
   /**
-   * Get Ollama model (env > config > default)
+   * Config/env key holding the model name for a provider
+   * (e.g. `XOEGIT_GEMINI_MODEL`). Env var and config field share the name.
    */
-  async getOllamaModel(): Promise<string | undefined> {
-    const envModel = process.env.XOEGIT_OLLAMA_MODEL;
+  private modelConfigKey(provider: ProviderName): keyof XoegitConfig {
+    return `XOEGIT_${provider.toUpperCase()}_MODEL` as keyof XoegitConfig;
+  }
+
+  /**
+   * Get the configured model name for a provider (env > config > undefined).
+   * Works for every provider; callers fall back to the provider default.
+   */
+  async getModel(provider: ProviderName): Promise<string | undefined> {
+    const key = this.modelConfigKey(provider);
+
+    const envModel = process.env[key];
     if (envModel) {
       return envModel;
     }
 
     const config = await this.loadConfig();
-    return config.XOEGIT_OLLAMA_MODEL;
+    return config[key] as string | undefined;
   }
 
   /**
-   * Save Ollama model
+   * Save the preferred model name for a provider.
    */
-  async saveOllamaModel(model: string): Promise<void> {
+  async saveModel(provider: ProviderName, model: string): Promise<void> {
     const config = await this.loadConfig();
-    config.XOEGIT_OLLAMA_MODEL = model;
+    (config as Record<string, string>)[this.modelConfigKey(provider)] = model;
     await this.saveConfig(config);
   }
 
@@ -223,28 +234,6 @@ export class ConfigService {
   async saveOpenRouterBaseUrl(baseUrl: string): Promise<void> {
     const config = await this.loadConfig();
     config.XOEGIT_OPENROUTER_BASE_URL = baseUrl;
-    await this.saveConfig(config);
-  }
-
-  /**
-   * Get OpenRouter model (env > config > undefined)
-   */
-  async getOpenRouterModel(): Promise<string | undefined> {
-    const envModel = process.env.XOEGIT_OPENROUTER_MODEL;
-    if (envModel) {
-      return envModel;
-    }
-
-    const config = await this.loadConfig();
-    return config.XOEGIT_OPENROUTER_MODEL;
-  }
-
-  /**
-   * Save OpenRouter model
-   */
-  async saveOpenRouterModel(model: string): Promise<void> {
-    const config = await this.loadConfig();
-    config.XOEGIT_OPENROUTER_MODEL = model;
     await this.saveConfig(config);
   }
 }

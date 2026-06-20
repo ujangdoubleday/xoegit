@@ -6,8 +6,6 @@ import { ProviderName } from '../types/index.js';
  */
 export interface ProviderRuntimeOptions {
   model?: string;
-  ollamaUrl?: string;
-  openrouterUrl?: string;
 }
 
 /**
@@ -29,19 +27,20 @@ export async function resolveProviderRuntime(
   provider: ProviderName,
   options: ProviderRuntimeOptions
 ): Promise<ProviderRuntime> {
-  const model = options.model;
+  // Explicit --model flag wins, else the saved per-provider model (env > config).
+  const model = options.model || (await configService.getModel(provider));
 
   switch (provider) {
     case 'ollama':
       return {
-        model: model || (await configService.getOllamaModel()),
-        baseUrl: options.ollamaUrl || (await configService.getOllamaBaseUrl()),
+        model,
+        baseUrl: await configService.getOllamaBaseUrl(),
       };
     case 'openrouter':
       return {
-        model: model || (await configService.getOpenRouterModel()),
+        model,
         // undefined lets OpenRouterProvider fall back to its default endpoint.
-        baseUrl: options.openrouterUrl || (await configService.getOpenRouterBaseUrl()),
+        baseUrl: await configService.getOpenRouterBaseUrl(),
       };
     default:
       return { model };

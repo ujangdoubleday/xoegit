@@ -33,9 +33,4 @@ program
     '--lang <code>',
     'Output language for the report (e.g., en, id, ja). Defaults to en',
     'en'
-  )
-  .option('--ollama-url <url>', 'Base URL for Ollama API (default: http://localhost:11434)')
-  .option(
-    '--openrouter-url <url>',
-    'Endpoint for OpenRouter API (default: https://openrouter.ai/api/v1/chat/completions)'
   );

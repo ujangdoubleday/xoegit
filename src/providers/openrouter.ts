@@ -27,7 +27,7 @@ function resolveModel(model: string): string {
  * OpenRouter provider — talks to the OpenAI-compatible chat completions
  * endpoint at https://openrouter.ai/api/v1/chat/completions.
  *
- * The base URL is configurable (constructor / --openrouter-url /
+ * The base URL is configurable (constructor / setup wizard /
  * XOEGIT_OPENROUTER_BASE_URL) to keep the integration modular.
  */
 export class OpenRouterProvider implements AIProvider {

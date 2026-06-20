@@ -12,6 +12,8 @@ import {
 import {
   getApiKeyHelpUrl,
   getDefaultEndpoint,
+  getDefaultModel,
+  getModelList,
   getProviderLabel,
   listProviders,
   requiresApiKey,
@@ -77,7 +79,16 @@ export async function runSetupWizard(
     }
   }
 
-  // 3. API key (skipped for keyless providers such as Ollama)
+  // 3. Model selection (every provider has a sensible default; Enter keeps it)
+  const defaultModel = getDefaultModel(provider);
+  showInfo(`Available models: ${getModelList(provider).join(', ')}`);
+  const model = await promptText(
+    `Model for ${getProviderLabel(provider)} (leave empty for default)`,
+    defaultModel
+  );
+  await configService.saveModel(provider, model);
+
+  // 4. API key (skipped for keyless providers such as Ollama)
   let apiKey: string | undefined;
   if (requiresApiKey(provider)) {
     const helpUrl = getApiKeyHelpUrl(provider);

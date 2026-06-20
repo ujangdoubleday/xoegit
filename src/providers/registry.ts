@@ -20,7 +20,7 @@ export function createProvider(name: ProviderName, config: ProviderConfig): AIPr
       if (!config.apiKey) {
         throw new Error('Gemini provider requires an API key');
       }
-      return new GeminiProvider(config.apiKey);
+      return new GeminiProvider(config.apiKey, config.model);
     }
     case 'openai': {
       if (!config.apiKey) {
