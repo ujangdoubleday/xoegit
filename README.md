@@ -8,7 +8,7 @@
 
 <img src="docs/xoegit-banner.png" alt="xoegit banner" width="100%">
 
-**xoegit** is an AI-powered CLI tool that generates concise, semantic, and atomic git commit messages and PR descriptions. It analyzes your `git diff`, `git status`, and `git log` to provide context-aware suggestions powered by Google's Gemini models.
+**xoegit** is an AI-powered CLI tool that generates concise, semantic, and atomic git commit messages and PR descriptions. It analyzes your `git diff`, `git status`, and `git log` to provide context-aware suggestions. It works with Google Gemini (the default), OpenAI, Anthropic Claude, OpenRouter, and local models through Ollama.
 
 > **Philosophy:** "Craft, Don't Code" — `xoegit` suggests commands; YOU execute them. You stay in control.
 
@@ -61,7 +61,7 @@ make
 
 ## Configuration
 
-Simply run `xoegit` for the first time. It will prompt you for your API Key securely and save it locally.
+Run `xoegit` for the first time. It prompts you for your API key and saves it locally.
 
 > **Security Note:** Your API key is stored locally and encrypted using AES-256-GCM. We do not collect, store, or have access to your API key. See [Security Policy](SECURITY.md) for details.
 
