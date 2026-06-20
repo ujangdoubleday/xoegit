@@ -25,6 +25,7 @@ import {
 } from '../git/index.js';
 import { generateSystemPrompt } from '../prompts/index.js';
 import { createProvider, requiresApiKey, getProviderLabel } from '../providers/index.js';
+import { resolveProviderRuntime } from './providerRuntime.js';
 import { ProviderName } from '../types/index.js';
 
 /**
@@ -73,6 +74,7 @@ export async function analyzeAction(): Promise<void> {
         openai: 'https://platform.openai.com/api-keys',
         anthropic: 'https://console.anthropic.com/settings/keys',
         ollama: '',
+        openrouter: 'https://openrouter.ai/keys',
       };
 
       if (helpUrls[providerName]) {
@@ -105,10 +107,17 @@ export async function analyzeAction(): Promise<void> {
       await configService.saveOllamaBaseUrl(options.ollamaUrl);
     }
 
+    // Save OpenRouter URL if explicitly set
+    if (options.openrouterUrl) {
+      await configService.saveOpenRouterBaseUrl(options.openrouterUrl);
+    }
+
     // Save model override if explicitly set
     if (options.model) {
       if (providerName === 'ollama') {
         await configService.saveOllamaModel(options.model);
+      } else if (providerName === 'openrouter') {
+        await configService.saveOpenRouterModel(options.model);
       }
     }
 
@@ -157,14 +166,12 @@ export async function analyzeAction(): Promise<void> {
 
     // 4. Call AI provider
     try {
-      const model = options.model as string | undefined;
-      const ollamaBaseUrl = options.ollamaUrl || (await configService.getOllamaBaseUrl());
-      const ollamaModel = model || (await configService.getOllamaModel());
+      const { model, baseUrl } = await resolveProviderRuntime(configService, providerName, options);
 
       const provider = createProvider(providerName, {
         apiKey,
-        model: providerName === 'ollama' ? ollamaModel : model,
-        baseUrl: ollamaBaseUrl,
+        model,
+        baseUrl,
       });
 
       // Build the user message (same as before)

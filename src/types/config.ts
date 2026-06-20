@@ -7,4 +7,7 @@ export interface XoegitConfig {
   XOEGIT_ANTHROPIC_API_KEY?: string;
   XOEGIT_OLLAMA_BASE_URL?: string;
   XOEGIT_OLLAMA_MODEL?: string;
+  XOEGIT_OPENROUTER_API_KEY?: string;
+  XOEGIT_OPENROUTER_BASE_URL?: string;
+  XOEGIT_OPENROUTER_MODEL?: string;
 }

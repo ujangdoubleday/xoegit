@@ -49,6 +49,29 @@ export type OllamaModelKey = keyof typeof OLLAMA_MODELS;
 export type OllamaModelName = (typeof OLLAMA_MODELS)[OllamaModelKey];
 
 /* ------------------------------------------------------------------ */
+/*  OpenRouter                                                        */
+/* ------------------------------------------------------------------ */
+/**
+ * Default REST endpoint for OpenRouter (OpenAI-compatible).
+ * Override via --openrouter-url or XOEGIT_OPENROUTER_BASE_URL.
+ */
+export const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+/**
+ * Curated shortcut keys -> fully-qualified OpenRouter model slugs.
+ * Any raw slug (e.g. "openai/gpt-4o") is also accepted via --model.
+ */
+export const OPENROUTER_MODELS = {
+  'gpt-4o-mini': 'openai/gpt-4o-mini',
+  'claude-3.5-haiku': 'anthropic/claude-3.5-haiku',
+  'llama-3.3-70b': 'meta-llama/llama-3.3-70b-instruct',
+  'deepseek-chat': 'deepseek/deepseek-chat',
+} as const;
+
+export type OpenRouterModelKey = keyof typeof OPENROUTER_MODELS;
+export type OpenRouterModelName = (typeof OPENROUTER_MODELS)[OpenRouterModelKey];
+
+/* ------------------------------------------------------------------ */
 /*  Defaults                                                          */
 /* ------------------------------------------------------------------ */
 const DEFAULT_MODELS: Record<ProviderName, string> = {
@@ -56,6 +79,7 @@ const DEFAULT_MODELS: Record<ProviderName, string> = {
   openai: OPENAI_MODELS['gpt-4.1-mini'],
   anthropic: ANTHROPIC_MODELS['claude-sonnet-4'],
   ollama: OLLAMA_MODELS['llama3.2'],
+  openrouter: OPENROUTER_MODELS['gpt-4o-mini'],
 };
 
 export function getDefaultModel(provider: ProviderName): string {
@@ -70,6 +94,7 @@ const MODEL_LISTS: Record<ProviderName, string[]> = {
   openai: Object.values(OPENAI_MODELS),
   anthropic: Object.values(ANTHROPIC_MODELS),
   ollama: Object.values(OLLAMA_MODELS),
+  openrouter: Object.values(OPENROUTER_MODELS),
 };
 
 /**
@@ -97,6 +122,8 @@ export function getAvailableModels(provider: ProviderName): string[] {
       return Object.keys(ANTHROPIC_MODELS);
     case 'ollama':
       return Object.keys(OLLAMA_MODELS);
+    case 'openrouter':
+      return Object.keys(OPENROUTER_MODELS);
     default:
       return [];
   }

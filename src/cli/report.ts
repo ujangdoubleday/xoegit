@@ -12,6 +12,7 @@ import {
   showInfo,
 } from '../utils/index.js';
 import { createProvider, requiresApiKey, getProviderLabel } from '../providers/index.js';
+import { resolveProviderRuntime } from './providerRuntime.js';
 import { isGitRepository } from '../git/index.js';
 import { parsePeriod, getGitLogForReport, getPeriodLabel } from '../git/report.js';
 import { generateReportSystemPrompt, generateReportUserPrompt } from '../prompts/report.js';
@@ -54,6 +55,7 @@ export async function reportAction(): Promise<void> {
         openai: 'https://platform.openai.com/api-keys',
         anthropic: 'https://console.anthropic.com/settings/keys',
         ollama: '',
+        openrouter: 'https://openrouter.ai/keys',
       };
 
       if (helpUrls[providerName]) {
@@ -84,6 +86,11 @@ export async function reportAction(): Promise<void> {
     // Save Ollama URL if explicitly set
     if (options.ollamaUrl) {
       await configService.saveOllamaBaseUrl(options.ollamaUrl);
+    }
+
+    // Save OpenRouter URL if explicitly set
+    if (options.openrouterUrl) {
+      await configService.saveOpenRouterBaseUrl(options.openrouterUrl);
     }
 
     // 3. Check if inside a git repository
@@ -127,14 +134,12 @@ export async function reportAction(): Promise<void> {
 
     // 6. Call AI provider
     try {
-      const model = options.model as string | undefined;
-      const ollamaBaseUrl = options.ollamaUrl || (await configService.getOllamaBaseUrl());
-      const ollamaModel = model || (await configService.getOllamaModel());
+      const { model, baseUrl } = await resolveProviderRuntime(configService, providerName, options);
 
       const provider = createProvider(providerName, {
         apiKey,
-        model: providerName === 'ollama' ? ollamaModel : model,
-        baseUrl: ollamaBaseUrl,
+        model,
+        baseUrl,
       });
 
       const report = await provider.generateContent(systemPrompt, userPrompt);
