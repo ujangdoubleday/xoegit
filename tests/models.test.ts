@@ -37,6 +37,10 @@ describe('Models', () => {
     it('should return default ollama model', () => {
       expect(getDefaultModel('ollama')).toBe('llama3.2');
     });
+
+    it('should default openrouter to openrouter/auto', () => {
+      expect(getDefaultModel('openrouter')).toBe('openrouter/auto');
+    });
   });
 
   describe('getAvailableModels', () => {
