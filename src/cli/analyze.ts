@@ -38,10 +38,17 @@ export async function analyzeAction(): Promise<void> {
   try {
     // 0. Check API Key Config
     const options = program.opts();
-    let providerName = (options.provider as ProviderName) || 'gemini';
     let apiKey = options.apiKey as string | undefined;
 
     const configService = new ConfigService();
+
+    // Resolve provider: an explicit --provider flag (or XOEGIT_PROVIDER env)
+    // wins; otherwise fall back to the saved preference (env > config > default)
+    // so a previously configured provider+key is reused without re-running setup.
+    const providerWasExplicit = program.getOptionValueSource('provider') !== 'default';
+    let providerName = providerWasExplicit
+      ? (options.provider as ProviderName)
+      : await configService.getProvider();
 
     // Handle --set-key flag (save and exit)
     if (options.setKey) {
@@ -68,7 +75,6 @@ export async function analyzeAction(): Promise<void> {
 
     // No API key yet -> run the interactive setup wizard
     if (requiresApiKey(providerName) && !apiKey) {
-      const providerWasExplicit = program.getOptionValueSource('provider') !== 'default';
       const setup = await runSetupWizard(configService, {
         preselectedProvider: providerWasExplicit ? providerName : undefined,
       });
@@ -77,27 +83,13 @@ export async function analyzeAction(): Promise<void> {
     }
 
     // Save provider preference if explicitly set via flag
-    if (options.provider) {
+    if (providerWasExplicit) {
       await configService.saveProvider(providerName);
-    }
-
-    // Save Ollama URL if explicitly set
-    if (options.ollamaUrl) {
-      await configService.saveOllamaBaseUrl(options.ollamaUrl);
-    }
-
-    // Save OpenRouter URL if explicitly set
-    if (options.openrouterUrl) {
-      await configService.saveOpenRouterBaseUrl(options.openrouterUrl);
     }
 
     // Save model override if explicitly set
     if (options.model) {
-      if (providerName === 'ollama') {
-        await configService.saveOllamaModel(options.model);
-      } else if (providerName === 'openrouter') {
-        await configService.saveOpenRouterModel(options.model);
-      }
+      await configService.saveModel(providerName, options.model);
     }
 
     // 1. Check if git repo
