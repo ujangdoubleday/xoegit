@@ -33,13 +33,15 @@ Both actions follow the same shape: resolve provider + API key → check git rep
 ### Provider abstraction (the key extension point)
 
 All AI backends implement `AIProvider` (`src/types/provider.ts`): a single `generateContent(systemPrompt, userMessage)`. Adding a provider means touching these together:
-- `src/providers/<name>.ts` — the implementation. Gemini uses `@google/genai`; OpenAI/Anthropic/Ollama call REST via `fetch`.
+- `src/providers/<name>.ts` — the implementation. Gemini uses `@google/genai`; OpenAI/Anthropic/Ollama/OpenRouter call REST via `fetch`.
 - `src/providers/registry.ts` — `createProvider` switch, `getProviderLabel`, `requiresApiKey`, `getApiKeyEnvVar` (env var like `XOEGIT_GEMINI_API_KEY`).
-- `src/providers/models.ts` — per-provider model maps, `getDefaultModel`, and `getModelList` (fallback order).
+- `src/providers/models.ts` — per-provider model maps, `getDefaultModel`, and `getModelList(provider, preferred?)` (fallback order, preferred/default first).
 - `src/types/provider.ts` — add to the `ProviderName` union.
-- `src/config/service.ts` — the `['gemini','openai','anthropic','ollama']` validation arrays.
+- `src/config/service.ts` — the `validProviders` array in `getProvider`.
 
-Only **Gemini** implements rate-limit fallback: on a 429 it walks `getModelList('gemini')` trying each model before failing. Other providers use a single model. Ollama is the only provider where `requiresApiKey` is false (uses `--ollama-url`, default `http://localhost:11434`). Default provider is `gemini`.
+Only **Gemini** implements rate-limit fallback: on a 429 it walks `getModelList('gemini', preferred)` trying each model before failing (the configured model, if any, is tried first). Other providers use a single model. Ollama is the only provider where `requiresApiKey` is false (endpoint via `XOEGIT_OLLAMA_BASE_URL` or the setup wizard, default `http://localhost:11434`). Default provider is `gemini`.
+
+Provider, model, and key are all persisted by the first-run setup wizard (`src/cli/setup.ts`) and reused on later runs: `analyze.ts`/`report.ts` resolve the provider from `getProvider()` unless `--provider` is passed explicitly, and the per-provider model from the generic `ConfigService.getModel`/`saveModel` (config key `XOEGIT_<PROVIDER>_MODEL`). There are no `--ollama-url`/`--openrouter-url` flags; endpoints come from config/env only.
 
 ### Config & secrets
 
