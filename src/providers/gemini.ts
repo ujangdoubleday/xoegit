@@ -33,9 +33,11 @@ async function tryGenerateWithModel(
 
 export class GeminiProvider implements AIProvider {
   private apiKey: string;
+  private model?: string;
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, model?: string) {
     this.apiKey = apiKey;
+    this.model = model;
   }
 
   /**
@@ -44,8 +46,8 @@ export class GeminiProvider implements AIProvider {
   async generateContent(systemPrompt: string, userMessage: string): Promise<string> {
     const ai = new GoogleGenAI({ apiKey: this.apiKey });
 
-    // Get ordered list of models to try
-    const modelsToTry = getModelList('gemini') as GeminiModelName[];
+    // Get ordered list of models to try (configured model first, then fallback)
+    const modelsToTry = getModelList('gemini', this.model) as GeminiModelName[];
     const errors: string[] = [];
 
     // Try each model in order, fallback on rate limit
