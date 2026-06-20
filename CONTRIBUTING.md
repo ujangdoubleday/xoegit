@@ -2,7 +2,7 @@
 
 Thank you for your interest in contributing!
 
-**First-time contributors are very welcome!** This is a beginner-friendly project — feel free to ask questions.
+First-time contributors are welcome. This is a beginner-friendly project, so feel free to ask questions.
 
 ## Quick Start
 
