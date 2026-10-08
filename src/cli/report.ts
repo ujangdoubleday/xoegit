@@ -70,12 +70,14 @@ export async function reportAction(): Promise<void> {
 
     // 4. Fetch git log
     const periodLabel = getPeriodLabel(period);
-    const spinnerText = period.isNow
-      ? `Fetching git log for today...`
-      : `Fetching git log for the last ${periodLabel}...`;
+    const scope = period.isNow
+      ? 'today'
+      : period.since
+        ? `from ${periodLabel}`
+        : `in the last ${periodLabel}`;
 
     const spinner = ora({
-      text: chalk.gray(spinnerText),
+      text: chalk.gray(`Fetching git log ${scope}...`),
       spinner: 'dots12',
     }).start();
 
@@ -83,10 +85,7 @@ export async function reportAction(): Promise<void> {
 
     if (!rawGitLog || rawGitLog.trim() === '') {
       spinner.stop();
-      const warningText = period.isNow
-        ? 'No commits found today.'
-        : `No commits found in the last ${periodLabel}.`;
-      showWarning(warningText);
+      showWarning(`No commits found ${scope}.`);
       return;
     }
 

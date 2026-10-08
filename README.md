@@ -122,7 +122,7 @@ xoegit
 | `-c, --context <text>`   | Provide context for more accurate suggestions                        |
 | `-e, --execute`          | Execute commits after confirmation prompt                            |
 | `--explain`              | Show reasoning behind each commit grouping                           |
-| `--report <period>`      | Generate a progress report from git log (e.g. `NOW`, `3D`, `4W`, `2M`) |
+| `--report <period>`      | Generate a progress report from git log (e.g. `NOW`, `3D`, `4W`, `2M`, `28-09-2026:04-10-2026`) |
 | `--lang <code>`          | Report language (e.g. `en`, `id`, `ja`); defaults to `en`            |
 | `-s, --set-key <key>`    | Save the API key for the selected provider to config                 |
 | `-d, --delete-key`       | Delete the saved API key for the selected provider                   |
@@ -171,6 +171,7 @@ npx xoegit --delete-key
 ```bash
 npx xoegit --report 4W            # last 4 weeks
 npx xoegit --report NOW --lang id # today's commits, in Indonesian
+npx xoegit --report 28-09-2026:04-10-2026 --lang id # date range (inclusive)
 ```
 
 **Execute mode (auto-commit with confirmation):**

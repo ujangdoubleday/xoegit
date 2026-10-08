@@ -49,6 +49,21 @@ describe('Git Report Module', () => {
     it('should throw for empty string', () => {
       expect(() => parsePeriod('')).toThrow('Invalid period format');
     });
+
+    it('should parse date range', () => {
+      const result = parsePeriod('28-09-2026:04-10-2026');
+      expect(result.since).toBe('2026-09-28');
+      expect(result.until).toBe('2026-10-04');
+      expect(result.isNow).toBe(false);
+    });
+
+    it('should throw for non-existent date', () => {
+      expect(() => parsePeriod('31-02-2026:01-03-2026')).toThrow('Invalid date');
+    });
+
+    it('should throw when start is after end', () => {
+      expect(() => parsePeriod('04-10-2026:28-09-2026')).toThrow('is after end date');
+    });
   });
 
   describe('getPeriodLabel', () => {
@@ -70,6 +85,11 @@ describe('Git Report Module', () => {
     it('should return label for months', () => {
       const period = parsePeriod('2M');
       expect(getPeriodLabel(period)).toBe('2 months');
+    });
+
+    it('should return label for date range', () => {
+      const period = parsePeriod('28-09-2026:04-10-2026');
+      expect(getPeriodLabel(period)).toBe('28-09-2026 to 04-10-2026');
     });
 
     it('should return "today" for NOW', () => {

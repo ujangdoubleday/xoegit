@@ -7,10 +7,25 @@ export interface ReportPeriod {
   unit: 'weeks' | 'days' | 'months';
   raw: string;
   isNow: boolean;
+  /** Date range bounds (YYYY-MM-DD), set only for DD-MM-YYYY:DD-MM-YYYY input */
+  since?: string;
+  until?: string;
 }
 
 /**
- * Parse period string like NOW, 4W, 3D, 2M into structured object
+ * Convert DD-MM-YYYY to YYYY-MM-DD, throwing if the date does not exist
+ */
+function toIsoDate(dmy: string): string {
+  const [d, m, y] = dmy.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  if (date.getUTCFullYear() !== y || date.getUTCMonth() !== m - 1 || date.getUTCDate() !== d) {
+    throw new Error(`Invalid date: "${dmy}".`);
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+/**
+ * Parse period string like NOW, 4W, 3D, 2M or DD-MM-YYYY:DD-MM-YYYY into structured object
  */
 export function parsePeriod(period: string): ReportPeriod {
   const trimmed = period.trim();
@@ -19,10 +34,20 @@ export function parsePeriod(period: string): ReportPeriod {
     return { value: 0, unit: 'days', raw: trimmed, isNow: true };
   }
 
+  const range = trimmed.match(/^(\d{2}-\d{2}-\d{4}):(\d{2}-\d{2}-\d{4})$/);
+  if (range) {
+    const since = toIsoDate(range[1]);
+    const until = toIsoDate(range[2]);
+    if (since > until) {
+      throw new Error(`Start date "${range[1]}" is after end date "${range[2]}".`);
+    }
+    return { value: 0, unit: 'days', raw: trimmed, isNow: false, since, until };
+  }
+
   const match = trimmed.match(/^(\d+)([WDM])$/i);
   if (!match) {
     throw new Error(
-      `Invalid period format: "${period}". Use format like NOW (today), 4W (weeks), 3D (days), or 2M (months).`
+      `Invalid period format: "${period}". Use format like NOW (today), 4W (weeks), 3D (days), 2M (months), or DD-MM-YYYY:DD-MM-YYYY (date range).`
     );
   }
 
@@ -55,6 +80,11 @@ export function getPeriodLabel(period: ReportPeriod): string {
     return 'today';
   }
 
+  if (period.since && period.until) {
+    const [from, to] = period.raw.split(':');
+    return `${from} to ${to}`;
+  }
+
   const unitMap: Record<string, string> = {
     weeks: 'week',
     days: 'day',
@@ -69,14 +99,12 @@ export function getPeriodLabel(period: ReportPeriod): string {
  * Get git log for report generation
  */
 export async function getGitLogForReport(period: ReportPeriod): Promise<string> {
-  const sinceArg = period.isNow ? 'midnight' : `${period.value} ${period.unit} ago`;
+  const rangeArgs =
+    period.since && period.until
+      ? [`--since=${period.since} 00:00:00`, `--until=${period.until} 23:59:59`]
+      : [`--since=${period.isNow ? 'midnight' : `${period.value} ${period.unit} ago`}`];
 
-  const result = await git.raw([
-    'log',
-    `--since=${sinceArg}`,
-    '--pretty=format:%ad | %s',
-    '--date=short',
-  ]);
+  const result = await git.raw(['log', ...rangeArgs, '--pretty=format:%ad | %s', '--date=short']);
 
   return result?.trim() || '';
 }
