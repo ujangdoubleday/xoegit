@@ -27,7 +27,7 @@ program
   .option('--explain', 'Show explanation for each commit grouping (verbose mode)')
   .option(
     '--report <period>',
-    'Generate weekly progress report from git log (e.g., NOW, 4W, 3D, 2M)'
+    'Generate weekly progress report from git log (e.g., NOW, 4W, 3D, 2M, 28-09-2026:04-10-2026)'
   )
   .option(
     '--lang <code>',
